@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeNames - Онлайн Игра</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎮 CodeNames</h1>
+            <div class="game-info">
+                <div class="team red-team">
+                    <h3>Красная команда</h3>
+                    <div class="score" id="redScore">9</div>
+                </div>
+                <div class="turn-info">
+                    <p id="currentTurn">Ход: Красная команда</p>
+                    <button id="toggleCaptain" class="btn">Режим: Игрок</button>
+                </div>
+                <div class="team blue-team">
+                    <h3>Синяя команда</h3>
+                    <div class="score" id="blueScore">9</div>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <div class="game-board" id="gameBoard">
+                <!-- Карточки будут добавлены через JavaScript -->
+            </div>
+        </main>
+
+        <footer>
+            <div class="controls">
+                <button id="newGame" class="btn btn-primary">Новая игра</button>
+                <button id="endTurn" class="btn btn-secondary">Закончить ход</button>
+            </div>
+            <div class="hint-section">
+                <input type="text" id="hintWord" placeholder="Подсказка капитана..." disabled>
+                <input type="number" id="hintCount" min="1" max="9" placeholder="Количество" disabled>
+                <button id="giveHint" class="btn" disabled>Дать подсказку</button>
+            </div>
+        </footer>
+    </div>
+
+    <div id="gameOverModal" class="modal">
+        <div class="modal-content">
+            <h2 id="winnerText">Победа!</h2>
+            <button id="playAgain" class="btn btn-primary">Играть снова</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

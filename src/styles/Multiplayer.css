@@ -1,0 +1,291 @@
+/* Стили для RoomSelector */
+.room-selector {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.room-selector-container {
+  max-width: 900px;
+  width: 100%;
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.room-selector h1 {
+  text-align: center;
+  font-size: 3em;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #666;
+  font-size: 1.1em;
+  margin-bottom: 40px;
+}
+
+.room-actions {
+  display: grid;
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+.action-card {
+  background: #f8f9fa;
+  padding: 30px;
+  border-radius: 15px;
+  text-align: center;
+  border: 3px solid #dee2e6;
+}
+
+.action-card h2 {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.action-card p {
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.join-form {
+  display: flex;
+  gap: 10px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.join-form input {
+  flex: 1;
+  padding: 12px 20px;
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 1.1em;
+  font-family: inherit;
+  text-transform: uppercase;
+}
+
+.divider {
+  text-align: center;
+  font-weight: bold;
+  color: #999;
+  font-size: 1.2em;
+  margin: 20px 0;
+}
+
+/* Активные комнаты */
+.active-rooms {
+  background: #f8f9fa;
+  padding: 25px;
+  border-radius: 15px;
+  margin-bottom: 30px;
+}
+
+.active-rooms h3 {
+  margin-bottom: 20px;
+  text-align: center;
+  color: #333;
+}
+
+.rooms-list {
+  display: grid;
+  gap: 15px;
+}
+
+.room-item {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 2px solid #dee2e6;
+  transition: all 0.3s ease;
+}
+
+.room-item:hover {
+  border-color: #667eea;
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+}
+
+.room-info {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.room-id {
+  font-weight: 600;
+  font-size: 1.1em;
+  color: #333;
+}
+
+.room-players,
+.room-status {
+  color: #666;
+}
+
+.room-info-section {
+  background: #e3f2fd;
+  padding: 25px;
+  border-radius: 15px;
+  border-left: 5px solid #2196f3;
+}
+
+.room-info-section h3 {
+  margin-bottom: 15px;
+  color: #1976d2;
+}
+
+.room-info-section ol {
+  margin-left: 20px;
+  color: #555;
+}
+
+.room-info-section li {
+  margin-bottom: 8px;
+  line-height: 1.6;
+}
+
+/* Room Wrapper */
+.room-wrapper {
+  min-height: 100vh;
+}
+
+.room-header {
+  background: white;
+  padding: 15px 30px;
+  margin: -20px -20px 20px -20px;
+  border-radius: 20px 20px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.room-code-display {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.room-code-display .label {
+  color: #666;
+  font-weight: 500;
+}
+
+.room-code-display .code {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 1.3em;
+  font-weight: bold;
+  letter-spacing: 2px;
+  font-family: monospace;
+}
+
+.btn-copy {
+  padding: 8px 16px;
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.btn-copy:hover {
+  background: #45a049;
+  transform: scale(1.05);
+}
+
+.btn-copy.copied {
+  background: #2196f3;
+}
+
+.btn-leave {
+  padding: 10px 20px;
+  background: #f44336;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.btn-leave:hover {
+  background: #d32f2f;
+}
+
+/* Room Not Found */
+.room-not-found {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.error-container {
+  background: white;
+  padding: 60px;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 500px;
+}
+
+.error-container h1 {
+  font-size: 3em;
+  margin-bottom: 20px;
+  color: #f44336;
+}
+
+.error-container p {
+  font-size: 1.2em;
+  color: #666;
+  margin-bottom: 30px;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .room-selector-container {
+    padding: 20px;
+  }
+
+  .room-selector h1 {
+    font-size: 2em;
+  }
+
+  .room-header {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+
+  .room-code-display {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .room-info {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+
+  .room-item {
+    flex-direction: column;
+    gap: 15px;
+  }
+}
