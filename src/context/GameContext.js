@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { generateCards, checkWinner, countRemaining } from '../utils/gameLogic';
 import { getThemeWords } from '../utils/themes';
 import { ensureAuth } from '../utils/firebase';
@@ -31,6 +31,17 @@ export const GameProvider = ({ children }) => {
   // Firebase
   const [roomId, setRoomId] = useState(null);
   const [synced, setSynced] = useState(false);
+
+  const roomIdRef = useRef(roomId);
+  const currentPlayerRef = useRef(currentPlayer);
+
+  useEffect(() => {
+    roomIdRef.current = roomId;
+  }, [roomId]);
+
+  useEffect(() => {
+    currentPlayerRef.current = currentPlayer;
+  }, [currentPlayer]);
 
   // Синхронизация с Firebase
   const syncWithFirebase = useCallback(async (newRoomId) => {
@@ -377,18 +388,21 @@ export const GameProvider = ({ children }) => {
   };
 
   // Покинуть комнату
-  const leaveRoom = () => {
-    if (roomId && currentPlayer) {
+  const leaveRoom = useCallback(() => {
+    const activeRoomId = roomIdRef.current;
+    const activePlayer = currentPlayerRef.current;
+
+    if (activeRoomId && activePlayer) {
       ensureAuth();
       // Удаляем игрока из Firebase
-      set(ref(db, `rooms/${roomId}/players/${currentPlayer.id}`), null);
+      set(ref(db, `rooms/${activeRoomId}/players/${activePlayer.id}`), null);
     }
     
     setRoomId(null);
     setCurrentPlayer(null);
     setSynced(false);
     localStorage.removeItem('currentPlayerId');
-  };
+  }, []);
 
   // Восстановление сессии
   useEffect(() => {
