@@ -152,4 +152,6 @@ export const GameService = {
   }
 };
 
-export default { RoomService, GameService };
+const FirebaseServices = { RoomService, GameService };
+
+export default FirebaseServices;

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { generateCards, checkWinner, countRemaining } from '../utils/gameLogic';
 import { getThemeWords } from '../utils/themes';
-import { RoomService, GameService, ensureAuth } from '../utils/firebase';
+import { ensureAuth } from '../utils/firebase';
 import { ref, onValue, set, update, off } from 'firebase/database';
 import { db } from '../utils/firebase';
 
@@ -106,7 +106,7 @@ export const GameProvider = ({ children }) => {
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [timerRunning, timeLeft, roomId]);
+  }, [timerRunning, timeLeft, roomId, currentTeam]);
 
   // Добавить игрока
   const addPlayer = async (name) => {
@@ -253,7 +253,6 @@ export const GameProvider = ({ children }) => {
     // Проверяем победу
     const gameWinner = checkWinner(updatedCards);
     let newWinner = null;
-    let newGameState = 'playing';
 
     if (gameWinner) {
       if (gameWinner.type === 'bomb') {
@@ -261,7 +260,6 @@ export const GameProvider = ({ children }) => {
       } else {
         newWinner = gameWinner;
       }
-      newGameState = 'finished';
     }
 
     // Обновляем в Firebase
