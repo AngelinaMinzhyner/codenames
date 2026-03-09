@@ -19,11 +19,17 @@ const RoomWrapper = () => {
       return;
     }
 
+    let unsubscribeRoom;
+    let isMounted = true;
+
     // Инициализируем синхронизацию с Firebase для этой комнаты
-    syncWithFirebase(roomId);
+    Promise.resolve(syncWithFirebase(roomId)).then((unsubscribe) => {
+      if (!isMounted) return;
+      unsubscribeRoom = unsubscribe;
+    });
 
     // Проверяем существование комнаты
-    RoomService.getRoom(roomId, (roomData) => {
+    const unsubscribeExistence = RoomService.getRoom(roomId, (roomData) => {
       if (!roomData) {
         setRoomExists(false);
       }
@@ -32,11 +38,14 @@ const RoomWrapper = () => {
     // Генерируем короткий код для отображения
     setRoomCode(roomId.slice(-8).toUpperCase());
 
-    // Очистка при размонтировании
+    // При обычном размонтировании не удаляем игрока,
+    // чтобы reconnect после refresh работал корректно.
     return () => {
-      leaveRoom();
+      isMounted = false;
+      if (typeof unsubscribeRoom === 'function') unsubscribeRoom();
+      if (typeof unsubscribeExistence === 'function') unsubscribeExistence();
     };
-  }, [roomId, syncWithFirebase, navigate, leaveRoom]);
+  }, [roomId, syncWithFirebase, navigate]);
 
   const copyRoomCode = () => {
     const link = `${window.location.origin}/room/${roomId}`;

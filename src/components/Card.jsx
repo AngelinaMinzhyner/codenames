@@ -4,19 +4,28 @@ import { useGame } from '../context/GameContext';
 const Card = ({ card }) => {
   const { currentPlayer, revealCard } = useGame();
 
+  const isCaptain = Boolean(currentPlayer?.isCaptain);
+  const cardLocked = !currentPlayer || isCaptain;
+
   const handleClick = () => {
+    if (cardLocked || card.revealed) return;
     revealCard(card.id);
   };
 
   const getCardClass = () => {
     let classes = 'card';
-    
+
     if (card.revealed) {
       classes += ` revealed revealed-${card.type} flip-animation`;
-    } else if (currentPlayer && currentPlayer.isCaptain) {
-      classes += ` captain-view captain-view-${card.type}`;
+    } else {
+      if (isCaptain) {
+        classes += ` captain-view captain-view-${card.type}`;
+      }
+      if (cardLocked) {
+        classes += ' card-locked';
+      }
     }
-    
+
     return classes;
   };
 

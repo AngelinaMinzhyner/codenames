@@ -1,38 +1,65 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import Card from './Card';
 import HintsList from './HintsList';
 
 const Game = () => {
-  const { 
-    cards, 
-    currentTeam, 
-    currentPlayer, 
-    remaining, 
-    giveHint, 
-    endTurn, 
+  const {
+    cards,
+    currentTeam,
+    currentPlayer,
+    players,
+    remaining,
+    giveHint,
+    endTurn,
     resetGame,
+    voteRematch,
     winner,
     gameState,
     timeLeft,
     timerRunning,
-    guessesLeft
+    guessesLeft,
+    rematchVotes,
+    lastEvent
   } = useGame();
 
   const [hintWord, setHintWord] = useState('');
   const [hintCount, setHintCount] = useState('');
+  const [turnPulse, setTurnPulse] = useState(false);
+  const [eventVisible, setEventVisible] = useState(false);
 
   const handleGiveHint = (e) => {
     e.preventDefault();
     if (hintWord.trim() && hintCount > 0) {
-      giveHint(hintWord.trim(), parseInt(hintCount));
+      giveHint(hintWord.trim(), parseInt(hintCount, 10));
       setHintWord('');
       setHintCount('');
     }
   };
 
-  const isCaptain = currentPlayer && currentPlayer.isCaptain;
-  const isCurrentTeam = currentPlayer && currentPlayer.team === currentTeam;
+  useEffect(() => {
+    setTurnPulse(true);
+    const timeoutId = setTimeout(() => setTurnPulse(false), 700);
+    return () => clearTimeout(timeoutId);
+  }, [currentTeam]);
+
+  useEffect(() => {
+    if (!lastEvent?.id) return;
+    setEventVisible(true);
+    const timeoutId = setTimeout(() => setEventVisible(false), 2200);
+    return () => clearTimeout(timeoutId);
+  }, [lastEvent?.id]);
+
+  const isCaptain = Boolean(currentPlayer?.isCaptain);
+  const isCurrentTeam = Boolean(currentPlayer?.team === currentTeam);
+
+  const matchPlayers = useMemo(
+    () => players.filter((p) => p.team === 'red' || p.team === 'blue'),
+    [players]
+  );
+  const rematchCount = matchPlayers.filter((p) => rematchVotes?.[p.id]).length;
+  const rematchTotal = matchPlayers.length;
+  const hasVotedRematch = Boolean(currentPlayer && rematchVotes?.[currentPlayer.id]);
 
   return (
     <div className="game">
@@ -42,10 +69,26 @@ const Game = () => {
             <h2>
               {winner === 'red' ? '🔴 Красная команда' : '🔵 Синяя команда'} победила! 🎉
             </h2>
-            <button className="btn btn-large btn-primary" onClick={resetGame}>
-              Вернуться в лобби
-            </button>
+            <p className="rematch-progress">Реванш: {rematchCount}/{rematchTotal} голосов</p>
+            <div className="modal-actions">
+              <button
+                className="btn btn-large btn-primary"
+                onClick={voteRematch}
+                disabled={hasVotedRematch}
+              >
+                {hasVotedRematch ? 'Вы уже проголосовали' : 'Голосовать за реванш'}
+              </button>
+              <button className="btn btn-large btn-outline" onClick={resetGame}>
+                Вернуться в лобби
+              </button>
+            </div>
           </div>
+        </div>
+      )}
+
+      {eventVisible && lastEvent && (
+        <div className={`event-banner event-${lastEvent.type} ${lastEvent.team ? `team-${lastEvent.team}` : ''}`}>
+          {lastEvent.message}
         </div>
       )}
 
@@ -56,20 +99,21 @@ const Game = () => {
             <h3>🔴 Красная</h3>
             <div className="score">{remaining.red}</div>
           </div>
-          
+
           <div className="turn-indicator">
-            <p className={`current-turn turn-${currentTeam}`}>
+            <p className={`current-turn turn-${currentTeam} ${turnPulse ? 'turn-pulse' : ''}`}>
               Ход: {currentTeam === 'red' ? '🔴 Красная' : '🔵 Синяя'} команда
             </p>
             {currentPlayer && (
               <p className="player-role">
-                Вы: {currentPlayer.name} 
+                Вы: {currentPlayer.name}
                 {isCaptain && ' 👑'}
-                ({currentPlayer.team === 'red' ? '🔴' : '🔵'})
+                ({currentPlayer.team === 'red' ? '🔴' : currentPlayer.team === 'blue' ? '🔵' : 'без команды'})
               </p>
             )}
+            {isCaptain && <p className="captain-private-hint">Капитан видит скрытые цвета карт.</p>}
           </div>
-          
+
           <div className="team-score blue-score">
             <h3>🔵 Синяя</h3>
             <div className="score">{remaining.blue}</div>
@@ -80,7 +124,7 @@ const Game = () => {
       <div className="game-main">
         <div className="game-left">
           <div className="game-board">
-            {cards.map(card => (
+            {cards.map((card) => (
               <Card key={card.id} card={card} />
             ))}
           </div>
@@ -120,18 +164,16 @@ const Game = () => {
                 {isCurrentTeam && !isCaptain && (
                   <p className="info-text">Открывайте карточки вашей команды</p>
                 )}
-                {!isCurrentTeam && (
-                  <p className="info-text">Ожидайте хода вашей команды</p>
-                )}
+                {!isCurrentTeam && <p className="info-text">Ожидайте хода вашей команды</p>}
               </div>
             )}
-            
+
             {isCurrentTeam && !isCaptain && (
               <button className="btn btn-secondary" onClick={endTurn}>
                 Закончить ход
               </button>
             )}
-            
+
             <button className="btn btn-outline" onClick={resetGame}>
               Выйти в лобби
             </button>

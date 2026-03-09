@@ -391,9 +391,76 @@ body {
   font-size: 1.1em;
 }
 
+.captain-private-hint {
+  font-size: 0.9em;
+  color: #7a5f00;
+  margin-top: 6px;
+}
+
 .game-main {
   display: flex;
   gap: 30px;
+}
+
+.event-banner {
+  position: sticky;
+  top: 10px;
+  z-index: 30;
+  margin: 0 auto 16px;
+  padding: 12px 18px;
+  max-width: 680px;
+  border-radius: 12px;
+  text-align: center;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+  animation: eventSlideIn 0.32s ease, eventSlideOut 0.32s ease 1.88s forwards;
+}
+
+.event-start,
+.event-rematch-start {
+  background: linear-gradient(135deg, #11998e, #38ef7d);
+}
+
+.event-hint {
+  background: linear-gradient(135deg, #3a7bd5, #00d2ff);
+}
+
+.event-turn-end,
+.event-timeout,
+.event-mistake {
+  background: linear-gradient(135deg, #ff9966, #ff5e62);
+}
+
+.event-win {
+  background: linear-gradient(135deg, #f7971e, #ffd200);
+  color: #2c2c2c;
+}
+
+.event-rematch-vote {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+@keyframes eventSlideIn {
+  from {
+    transform: translateY(-16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes eventSlideOut {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-12px);
+    opacity: 0;
+  }
 }
 
 .game-left {
@@ -445,13 +512,33 @@ body {
   overflow: hidden;
 }
 
-.card:hover:not(.revealed) {
+.card:hover:not(.revealed):not(.card-locked) {
   transform: translateY(-5px);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
+.card.card-locked {
+  cursor: not-allowed;
+}
+
 .card.flip-animation {
   animation: flipCard 0.6s ease-in-out;
+}
+
+.current-turn.turn-pulse {
+  animation: turnPulse 0.7s ease;
+}
+
+@keyframes turnPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .card-word {
@@ -726,6 +813,19 @@ body {
   color: #333;
 }
 
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.rematch-progress {
+  font-size: 1.1em;
+  color: #555;
+  margin-bottom: 18px;
+}
+
 /* Адаптивность */
 @media (max-width: 1400px) {
   .game-main {
@@ -744,29 +844,89 @@ body {
 }
 
 @media (max-width: 768px) {
+  .app {
+    padding: 10px;
+  }
+
   .teams-container {
     grid-template-columns: 1fr;
   }
-  
+
+  .join-form {
+    flex-direction: column;
+  }
+
+  .join-form input,
+  .join-form button {
+    width: 100%;
+  }
+
   .game-board {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 5px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
   }
-  
+
   .card {
-    font-size: 0.7em;
-    padding: 5px;
+    font-size: 0.65em;
+    padding: 4px;
+    border-width: 2px;
   }
-  
+
   .game-status {
     flex-direction: column;
   }
-  
-  .lobby {
-    padding: 20px;
+
+  .score {
+    font-size: 2.2em;
   }
-  
+
+  .current-turn {
+    font-size: 1.05em;
+    padding: 10px;
+  }
+
+  .hint-form {
+    flex-direction: column;
+  }
+
+  .hint-form input[type="number"] {
+    width: 100%;
+  }
+
+  .game-controls {
+    padding: 12px;
+  }
+
+  .lobby {
+    padding: 16px;
+  }
+
   .game {
-    padding: 15px;
+    padding: 12px;
+  }
+
+  .modal-content {
+    width: calc(100% - 24px);
+    padding: 22px;
+  }
+}
+
+@media (max-width: 520px) {
+  .lobby-header h1,
+  .game-header h1 {
+    font-size: 1.8em;
+  }
+
+  .game-board {
+    gap: 4px;
+  }
+
+  .timer-display {
+    font-size: 2.2em;
+  }
+
+  .event-banner {
+    font-size: 0.9em;
+    padding: 10px 12px;
   }
 }

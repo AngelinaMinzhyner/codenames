@@ -27,6 +27,8 @@ export const GameProvider = ({ children }) => {
   const [timeLeft, setTimeLeft] = useState(60);
   const [timerRunning, setTimerRunning] = useState(false);
   const [guessesLeft, setGuessesLeft] = useState(0);
+  const [rematchVotes, setRematchVotes] = useState({});
+  const [lastEvent, setLastEvent] = useState(null);
   
   // Firebase
   const [roomId, setRoomId] = useState(null);
@@ -34,6 +36,18 @@ export const GameProvider = ({ children }) => {
 
   const roomIdRef = useRef(roomId);
   const currentPlayerRef = useRef(currentPlayer);
+
+  const getClientId = useCallback(() => {
+    const key = 'codenames_client_id';
+    let clientId = localStorage.getItem(key);
+    if (!clientId) {
+      clientId = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      localStorage.setItem(key, clientId);
+    }
+    return clientId;
+  }, []);
+
+  const getPlayerStorageKey = useCallback((rid) => `currentPlayerId_${rid}`, []);
 
   useEffect(() => {
     roomIdRef.current = roomId;
@@ -64,6 +78,8 @@ export const GameProvider = ({ children }) => {
       if (roomData.players) {
         const playersList = Object.values(roomData.players);
         setPlayers(playersList);
+      } else {
+        setPlayers([]);
       }
 
       // Синхронизируем состояние игры
@@ -77,6 +93,11 @@ export const GameProvider = ({ children }) => {
         if (gs.timeLeft !== undefined) setTimeLeft(gs.timeLeft);
         if (gs.timerRunning !== undefined) setTimerRunning(gs.timerRunning);
         if (gs.guessesLeft !== undefined) setGuessesLeft(gs.guessesLeft);
+        setRematchVotes(gs.rematchVotes || {});
+        setLastEvent(gs.lastEvent || null);
+      } else {
+        setRematchVotes({});
+        setLastEvent(null);
       }
 
       // Синхронизируем подсказки
@@ -105,11 +126,18 @@ export const GameProvider = ({ children }) => {
           const newTime = prev - 1;
           if (newTime <= 0) {
             setTimerRunning(false);
+            const nextTeam = currentTeam === 'red' ? 'blue' : 'red';
             update(ref(db, `rooms/${roomId}/gameState`), {
               timerRunning: false,
               timeLeft: 0,
               guessesLeft: 0,
-              currentTeam: currentTeam === 'red' ? 'blue' : 'red'
+              currentTeam: nextTeam,
+              lastEvent: {
+                id: Date.now(),
+                type: 'timeout',
+                message: 'Время вышло. Ход передан сопернику.',
+                team: nextTeam
+              }
             });
             return 0;
           }
@@ -131,20 +159,36 @@ export const GameProvider = ({ children }) => {
     }
     await ensureAuth();
 
+    const clientId = getClientId();
+    const existingPlayer = players.find((p) => p.clientId === clientId);
+
+    if (existingPlayer) {
+      const updatedPlayer = { ...existingPlayer, name };
+      await update(ref(db, `rooms/${roomId}/players/${existingPlayer.id}`), {
+        name,
+        lastSeenAt: Date.now()
+      });
+      setCurrentPlayer(updatedPlayer);
+      localStorage.setItem(getPlayerStorageKey(roomId), existingPlayer.id);
+      return updatedPlayer;
+    }
+
     const newPlayer = {
       id: Date.now().toString(),
+      clientId,
       name,
       team: null,
       isCaptain: false,
       readyToStart: false,
-      joinedAt: Date.now()
+      joinedAt: Date.now(),
+      lastSeenAt: Date.now()
     };
 
     // Добавляем в Firebase
     await set(ref(db, `rooms/${roomId}/players/${newPlayer.id}`), newPlayer);
 
     setCurrentPlayer(newPlayer);
-    localStorage.setItem('currentPlayerId', newPlayer.id);
+    localStorage.setItem(getPlayerStorageKey(roomId), newPlayer.id);
     
     return newPlayer;
   };
@@ -232,6 +276,13 @@ export const GameProvider = ({ children }) => {
       timeLeft: 60,
       timerRunning: false,
       guessesLeft: 0,
+      rematchVotes: {},
+      lastEvent: {
+        id: Date.now(),
+        type: 'start',
+        message: `Игра началась. Первыми ходят ${firstTeam === 'red' ? 'красные' : 'синие'}.`,
+        team: firstTeam
+      },
       startedAt: Date.now()
     });
 
@@ -243,16 +294,21 @@ export const GameProvider = ({ children }) => {
   const revealCard = async (cardId) => {
     if (!roomId || gameState !== 'playing') return;
     await ensureAuth();
-    
+
+    if (!currentPlayer) {
+      alert('Сначала войдите в игру.');
+      return;
+    }
+
     const card = cards.find(c => c.id === cardId);
     if (!card || card.revealed) return;
 
-    if (currentPlayer && currentPlayer.isCaptain) {
+    if (currentPlayer.isCaptain) {
       alert('Капитан не может открывать карты!');
       return;
     }
 
-    if (currentPlayer && currentPlayer.team !== currentTeam) {
+    if (currentPlayer.team !== currentTeam) {
       alert('Сейчас ход другой команды!');
       return;
     }
@@ -285,10 +341,17 @@ export const GameProvider = ({ children }) => {
 
     // Ошиблись (нейтральная/чужая/мина) -> ход переходит сразу.
     if (card.type !== currentTeam) {
-      updates.currentTeam = currentTeam === 'red' ? 'blue' : 'red';
+      const nextTeam = currentTeam === 'red' ? 'blue' : 'red';
+      updates.currentTeam = nextTeam;
       updates.timerRunning = false;
       updates.timeLeft = 60;
       updates.guessesLeft = 0;
+      updates.lastEvent = {
+        id: Date.now(),
+        type: 'mistake',
+        message: 'Ошибка в выборе. Ход переходит сопернику.',
+        team: nextTeam
+      };
     } else {
       // Верно угадали слово своей команды.
       const nextGuessesLeft = Math.max(guessesLeft - 1, 0);
@@ -296,9 +359,16 @@ export const GameProvider = ({ children }) => {
 
       // Угадали все слова по подсказке -> автопереход хода.
       if (nextGuessesLeft === 0) {
-        updates.currentTeam = currentTeam === 'red' ? 'blue' : 'red';
+        const nextTeam = currentTeam === 'red' ? 'blue' : 'red';
+        updates.currentTeam = nextTeam;
         updates.timerRunning = false;
         updates.timeLeft = 60;
+        updates.lastEvent = {
+          id: Date.now(),
+          type: 'turn-end',
+          message: 'Лимит угадываний исчерпан. Ход передан.',
+          team: nextTeam
+        };
       }
     }
 
@@ -307,6 +377,12 @@ export const GameProvider = ({ children }) => {
       updates.status = 'finished';
       updates.timerRunning = false;
       updates.guessesLeft = 0;
+      updates.lastEvent = {
+        id: Date.now(),
+        type: 'win',
+        message: `${newWinner === 'red' ? 'Красная' : 'Синяя'} команда победила!`,
+        team: newWinner
+      };
     }
 
     await update(ref(db, `rooms/${roomId}/gameState`), updates);
@@ -343,7 +419,13 @@ export const GameProvider = ({ children }) => {
     await update(ref(db, `rooms/${roomId}/gameState`), {
       timeLeft: 60,
       timerRunning: true,
-      guessesLeft: Number(count)
+      guessesLeft: Number(count),
+      lastEvent: {
+        id: Date.now(),
+        type: 'hint',
+        message: `Подсказка: ${word} (${count})`,
+        team: currentTeam
+      }
     });
   };
 
@@ -352,11 +434,18 @@ export const GameProvider = ({ children }) => {
     if (!roomId) return;
     await ensureAuth();
 
+    const nextTeam = currentTeam === 'red' ? 'blue' : 'red';
     await update(ref(db, `rooms/${roomId}/gameState`), {
-      currentTeam: currentTeam === 'red' ? 'blue' : 'red',
+      currentTeam: nextTeam,
       timerRunning: false,
       timeLeft: 60,
-      guessesLeft: 0
+      guessesLeft: 0,
+      lastEvent: {
+        id: Date.now(),
+        type: 'turn-end',
+        message: 'Ход завершен игроком команды.',
+        team: nextTeam
+      }
     });
   };
 
@@ -372,7 +461,9 @@ export const GameProvider = ({ children }) => {
       winner: null,
       timeLeft: 60,
       timerRunning: false,
-      guessesLeft: 0
+      guessesLeft: 0,
+      rematchVotes: {},
+      lastEvent: null
     });
 
     await set(ref(db, `rooms/${roomId}/hints`), {});
@@ -398,24 +489,35 @@ export const GameProvider = ({ children }) => {
       set(ref(db, `rooms/${activeRoomId}/players/${activePlayer.id}`), null);
     }
     
+    if (activeRoomId) {
+      localStorage.removeItem(getPlayerStorageKey(activeRoomId));
+    }
+
     setRoomId(null);
     setCurrentPlayer(null);
     setSynced(false);
-    localStorage.removeItem('currentPlayerId');
-  }, []);
+  }, [getPlayerStorageKey]);
 
   // Восстановление сессии
   useEffect(() => {
-    if (roomId && !currentPlayer) {
-      const savedPlayerId = localStorage.getItem('currentPlayerId');
-      if (savedPlayerId) {
-        const savedPlayer = players.find(p => p.id === savedPlayerId);
-        if (savedPlayer) {
-          setCurrentPlayer(savedPlayer);
-        }
+    if (!roomId || currentPlayer) return;
+
+    const savedPlayerId = localStorage.getItem(getPlayerStorageKey(roomId));
+    if (savedPlayerId) {
+      const savedPlayer = players.find((p) => p.id === savedPlayerId);
+      if (savedPlayer) {
+        setCurrentPlayer(savedPlayer);
+        return;
       }
     }
-  }, [roomId, players, currentPlayer]);
+
+    const clientId = getClientId();
+    const reconnectPlayer = players.find((p) => p.clientId === clientId);
+    if (reconnectPlayer) {
+      setCurrentPlayer(reconnectPlayer);
+      localStorage.setItem(getPlayerStorageKey(roomId), reconnectPlayer.id);
+    }
+  }, [roomId, players, currentPlayer, getClientId, getPlayerStorageKey]);
 
   // Обновляем currentPlayer из актуального списка игроков,
   // чтобы статус команды/капитана не оставался устаревшим локально.
@@ -426,6 +528,57 @@ export const GameProvider = ({ children }) => {
       setCurrentPlayer(actualPlayer);
     }
   }, [players, currentPlayer]);
+
+  const voteRematch = async () => {
+    if (!roomId || !currentPlayer || gameState !== 'finished') return;
+    await ensureAuth();
+
+    const playerTeams = players.filter((p) => p.team === 'red' || p.team === 'blue');
+    if (playerTeams.length === 0) return;
+
+    const nextVotes = {
+      ...rematchVotes,
+      [currentPlayer.id]: true
+    };
+
+    await update(ref(db, `rooms/${roomId}/gameState`), {
+      rematchVotes: nextVotes,
+      lastEvent: {
+        id: Date.now(),
+        type: 'rematch-vote',
+        message: `${currentPlayer.name} проголосовал за реванш`,
+        team: currentPlayer.team || null
+      }
+    });
+
+    const allAccepted = playerTeams.every((p) => nextVotes[p.id]);
+    if (!allAccepted) return;
+
+    const themeWords = getThemeWords(selectedTheme);
+    const newCards = generateCards(themeWords);
+    const firstTeam = Math.random() < 0.5 ? 'red' : 'blue';
+
+    await set(ref(db, `rooms/${roomId}/gameState`), {
+      status: 'playing',
+      cards: newCards,
+      currentTeam: firstTeam,
+      selectedTheme,
+      winner: null,
+      timeLeft: 60,
+      timerRunning: false,
+      guessesLeft: 0,
+      rematchVotes: {},
+      lastEvent: {
+        id: Date.now(),
+        type: 'rematch-start',
+        message: `Реванш стартовал. Первыми ходят ${firstTeam === 'red' ? 'красные' : 'синие'}.`,
+        team: firstTeam
+      },
+      startedAt: Date.now()
+    });
+
+    await set(ref(db, `rooms/${roomId}/hints`), {});
+  };
 
   const value = {
     gameState,
@@ -439,6 +592,8 @@ export const GameProvider = ({ children }) => {
     timeLeft,
     timerRunning,
     guessesLeft,
+    rematchVotes,
+    lastEvent,
     roomId,
     synced,
     addPlayer,
@@ -449,6 +604,7 @@ export const GameProvider = ({ children }) => {
     giveHint,
     endTurn,
     resetGame,
+    voteRematch,
     setSelectedTheme,
     syncWithFirebase,
     leaveRoom,
