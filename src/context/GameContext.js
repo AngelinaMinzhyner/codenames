@@ -35,9 +35,12 @@ export const GameProvider = ({ children }) => {
   // Синхронизация с Firebase
   const syncWithFirebase = useCallback(async (newRoomId) => {
     if (!db || !newRoomId) return;
-    await ensureAuth();
-    
     setRoomId(newRoomId);
+    try {
+      await ensureAuth();
+    } catch (error) {
+      console.error('Auth error while syncing room:', error);
+    }
     
     // Подписка на изменения комнаты
     const roomRef = ref(db, `rooms/${newRoomId}`);
@@ -70,8 +73,10 @@ export const GameProvider = ({ children }) => {
         const hintsList = Object.values(roomData.hints).sort((a, b) => b.id - a.id);
         setHints(hintsList);
       }
-
       setSynced(true);
+    }, (error) => {
+      console.error('Room sync error:', error);
+      setSynced(false);
     });
 
     return () => {
@@ -110,7 +115,9 @@ export const GameProvider = ({ children }) => {
 
   // Добавить игрока
   const addPlayer = async (name) => {
-    if (!roomId) return null;
+    if (!roomId) {
+      throw new Error('Подключение к комнате еще не завершено. Попробуйте через 1-2 секунды.');
+    }
     await ensureAuth();
 
     const newPlayer = {
@@ -122,13 +129,11 @@ export const GameProvider = ({ children }) => {
       joinedAt: Date.now()
     };
 
-    setCurrentPlayer(newPlayer);
-    
-    // Сохраняем в localStorage
-    localStorage.setItem('currentPlayerId', newPlayer.id);
-
     // Добавляем в Firebase
     await set(ref(db, `rooms/${roomId}/players/${newPlayer.id}`), newPlayer);
+
+    setCurrentPlayer(newPlayer);
+    localStorage.setItem('currentPlayerId', newPlayer.id);
     
     return newPlayer;
   };
@@ -397,6 +402,16 @@ export const GameProvider = ({ children }) => {
       }
     }
   }, [roomId, players, currentPlayer]);
+
+  // Обновляем currentPlayer из актуального списка игроков,
+  // чтобы статус команды/капитана не оставался устаревшим локально.
+  useEffect(() => {
+    if (!currentPlayer) return;
+    const actualPlayer = players.find((p) => p.id === currentPlayer.id);
+    if (actualPlayer && actualPlayer !== currentPlayer) {
+      setCurrentPlayer(actualPlayer);
+    }
+  }, [players, currentPlayer]);
 
   const value = {
     gameState,

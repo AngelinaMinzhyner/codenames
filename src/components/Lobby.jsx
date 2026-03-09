@@ -3,15 +3,19 @@ import { useGame } from '../context/GameContext';
 import { getThemesList } from '../utils/themes';
 
 const Lobby = () => {
-  const { players, currentPlayer, addPlayer, joinTeam, becomeCaptain, startGame, selectedTheme, setSelectedTheme } = useGame();
+  const { players, currentPlayer, addPlayer, joinTeam, becomeCaptain, startGame, selectedTheme, setSelectedTheme, synced } = useGame();
   const [nameInput, setNameInput] = useState('');
   const themes = getThemesList();
 
-  const handleJoin = (e) => {
+  const handleJoin = async (e) => {
     e.preventDefault();
     if (nameInput.trim()) {
-      addPlayer(nameInput.trim());
-      setNameInput('');
+      try {
+        await addPlayer(nameInput.trim());
+        setNameInput('');
+      } catch (error) {
+        alert(error?.message || 'Не удалось войти в комнату. Проверьте Firebase настройки и попробуйте снова.');
+      }
     }
   };
 
@@ -40,9 +44,10 @@ const Lobby = () => {
               onChange={(e) => setNameInput(e.target.value)}
               placeholder="Введите ваше имя..."
               maxLength={20}
+              disabled={!synced}
             />
-            <button type="submit" className="btn btn-primary">
-              Войти в игру
+            <button type="submit" className="btn btn-primary" disabled={!synced}>
+              {synced ? 'Войти в игру' : 'Подключение к комнате...'}
             </button>
           </form>
         ) : (
