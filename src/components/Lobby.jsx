@@ -3,7 +3,7 @@ import { useGame } from '../context/GameContext';
 import { getThemesList } from '../utils/themes';
 
 const Lobby = () => {
-  const { players, currentPlayer, addPlayer, joinTeam, becomeCaptain, startGame, selectedTheme, setSelectedTheme, synced } = useGame();
+  const { players, currentPlayer, addPlayer, joinTeam, becomeCaptain, startGame, selectedTheme, selectTheme, synced } = useGame();
   const [nameInput, setNameInput] = useState('');
   const themes = getThemesList();
 
@@ -144,7 +144,7 @@ const Lobby = () => {
             <button
               key={theme.id}
               className={`theme-button ${selectedTheme === theme.id ? 'active' : ''}`}
-              onClick={() => setSelectedTheme(theme.id)}
+              onClick={() => selectTheme(theme.id)}
             >
               <div className="theme-name">{theme.name}</div>
               <div className="theme-difficulty">Сложность: {theme.difficulty}</div>

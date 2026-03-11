@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import Card from './Card';
 import HintsList from './HintsList';
@@ -8,18 +8,15 @@ const Game = () => {
     cards,
     currentTeam,
     currentPlayer,
-    players,
     remaining,
     giveHint,
     endTurn,
     resetGame,
-    voteRematch,
     winner,
     gameState,
     timeLeft,
     timerRunning,
     guessesLeft,
-    rematchVotes,
     lastEvent
   } = useGame();
 
@@ -53,38 +50,8 @@ const Game = () => {
   const isCaptain = Boolean(currentPlayer?.isCaptain);
   const isCurrentTeam = Boolean(currentPlayer?.team === currentTeam);
 
-  const matchPlayers = useMemo(
-    () => players.filter((p) => p.team === 'red' || p.team === 'blue'),
-    [players]
-  );
-  const rematchCount = matchPlayers.filter((p) => rematchVotes?.[p.id]).length;
-  const rematchTotal = matchPlayers.length;
-  const hasVotedRematch = Boolean(currentPlayer && rematchVotes?.[currentPlayer.id]);
-
   return (
     <div className="game">
-      {gameState === 'finished' && (
-        <div className="modal show">
-          <div className="modal-content">
-            <h2>
-              {winner === 'red' ? '🔴 Красная команда' : '🔵 Синяя команда'} победила! 🎉
-            </h2>
-            <p className="rematch-progress">Реванш: {rematchCount}/{rematchTotal} голосов</p>
-            <div className="modal-actions">
-              <button
-                className="btn btn-large btn-primary"
-                onClick={voteRematch}
-                disabled={hasVotedRematch}
-              >
-                {hasVotedRematch ? 'Вы уже проголосовали' : 'Голосовать за реванш'}
-              </button>
-              <button className="btn btn-large btn-outline" onClick={resetGame}>
-                Вернуться в лобби
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {eventVisible && lastEvent && (
         <div className={`event-banner event-${lastEvent.type} ${lastEvent.team ? `team-${lastEvent.team}` : ''}`}>
@@ -133,7 +100,7 @@ const Game = () => {
             <div className={`timer ${timeLeft <= 10 ? 'warning' : ''}`}>
               <div className="timer-display">{timeLeft}s</div>
               <div className="timer-hint">Осталось угадываний по подсказке: {guessesLeft}</div>
-              <div className="timer-bar" style={{ width: `${(timeLeft / 60) * 100}%` }}></div>
+              <div className="timer-bar" style={{ width: `${(timeLeft / 30) * 100}%` }}></div>
             </div>
           )}
 
@@ -178,6 +145,19 @@ const Game = () => {
               Выйти в лобби
             </button>
           </div>
+
+          {gameState === 'finished' && (
+            <div className="finished-actions">
+              <h2>
+                {winner === 'red' ? '🔴 Красная команда' : '🔵 Синяя команда'} победила! 🎉
+              </h2>
+              <div className="modal-actions">
+                <button className="btn btn-large btn-outline" onClick={resetGame}>
+                  Вернуться в лобби
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="game-right">

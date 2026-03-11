@@ -417,8 +417,7 @@ body {
   animation: eventSlideIn 0.32s ease, eventSlideOut 0.32s ease 1.88s forwards;
 }
 
-.event-start,
-.event-rematch-start {
+.event-start {
   background: linear-gradient(135deg, #11998e, #38ef7d);
 }
 
@@ -437,8 +436,10 @@ body {
   color: #2c2c2c;
 }
 
-.event-rematch-vote {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+.event-pick,
+.event-neutral {
+  background: linear-gradient(135deg, #6a85b6, #bac8e0);
+  color: #1f2a44;
 }
 
 @keyframes eventSlideIn {
@@ -820,10 +821,18 @@ body {
   flex-wrap: wrap;
 }
 
-.rematch-progress {
-  font-size: 1.1em;
-  color: #555;
-  margin-bottom: 18px;
+.finished-actions {
+  margin-top: 14px;
+  padding: 20px;
+  border-radius: 14px;
+  background: #f8f9fa;
+  text-align: center;
+  border: 2px solid #e4e7ec;
+}
+
+.finished-actions h2 {
+  margin-bottom: 10px;
+  color: #2f3a4a;
 }
 
 /* Адаптивность */
