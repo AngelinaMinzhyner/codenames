@@ -10,7 +10,7 @@ const Game = () => {
     cards,
     currentTeam,
     currentPlayer,
-    remaining,
+    players = [],
     giveHint,
     endTurn,
     resetGame,
@@ -56,7 +56,6 @@ const Game = () => {
     return <WhoAmIGame />;
   }
 
-  const players = useGame().players || [];
   const blackPlayers = players.filter(p => p.team === 'black');
   const whitePlayers = players.filter(p => p.team === 'white');
 
