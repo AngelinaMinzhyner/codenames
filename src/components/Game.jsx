@@ -24,7 +24,6 @@ const Game = () => {
 
   const [hintWord, setHintWord] = useState('');
   const [hintCount, setHintCount] = useState('');
-  const [turnPulse, setTurnPulse] = useState(false);
   const [eventVisible, setEventVisible] = useState(false);
 
   const handleGiveHint = (e) => {
@@ -35,12 +34,6 @@ const Game = () => {
       setHintCount('');
     }
   };
-
-  useEffect(() => {
-    setTurnPulse(true);
-    const timeoutId = setTimeout(() => setTurnPulse(false), 700);
-    return () => clearTimeout(timeoutId);
-  }, [currentTeam]);
 
   useEffect(() => {
     if (!lastEvent?.id) return;
