@@ -7,6 +7,13 @@ import { db } from '../utils/firebase';
 
 const GameContext = createContext();
 
+const EMPTY_REMAINING = { black: 0, white: 0 };
+
+const createLobbyState = (mode = null) => ({
+  status: 'lobby',
+  mode
+});
+
 export const useGame = () => {
   const context = useContext(GameContext);
   if (!context) {
@@ -17,10 +24,11 @@ export const useGame = () => {
 
 export const GameProvider = ({ children }) => {
   const [gameState, setGameState] = useState('lobby');
+  const [selectedGame, setSelectedGame] = useState(null);
   const [players, setPlayers] = useState([]);
   const [currentPlayer, setCurrentPlayer] = useState(null);
   const [cards, setCards] = useState([]);
-  const [currentTeam, setCurrentTeam] = useState('red');
+  const [currentTeam, setCurrentTeam] = useState('black');
   const [hints, setHints] = useState([]);
   const [winner, setWinner] = useState(null);
   const [selectedTheme, setSelectedThemeState] = useState('classic');
@@ -28,6 +36,8 @@ export const GameProvider = ({ children }) => {
   const [timerRunning, setTimerRunning] = useState(false);
   const [guessesLeft, setGuessesLeft] = useState(0);
   const [lastEvent, setLastEvent] = useState(null);
+  const [whoAmIAssignments, setWhoAmIAssignments] = useState({});
+  const [whoAmINotes, setWhoAmINotes] = useState({});
   
   // Firebase
   const [roomId, setRoomId] = useState(null);
@@ -56,6 +66,22 @@ export const GameProvider = ({ children }) => {
     currentPlayerRef.current = currentPlayer;
   }, [currentPlayer]);
 
+  const resetCodenamesState = useCallback(() => {
+    setCards([]);
+    setCurrentTeam('black');
+    setHints([]);
+    setWinner(null);
+    setTimeLeft(30);
+    setTimerRunning(false);
+    setGuessesLeft(0);
+    setLastEvent(null);
+  }, []);
+
+  const resetWhoAmIState = useCallback(() => {
+    setWhoAmIAssignments({});
+    setWhoAmINotes({});
+  }, []);
+
   // Синхронизация с Firebase
   const syncWithFirebase = useCallback(async (newRoomId) => {
     if (!db || !newRoomId) return;
@@ -73,6 +99,9 @@ export const GameProvider = ({ children }) => {
       const roomData = snapshot.val();
       if (!roomData) return;
 
+      const activeGame = roomData.selectedGame || roomData.gameState?.mode || null;
+      setSelectedGame(activeGame);
+
       // Синхронизируем игроков
       if (roomData.players) {
         const playersList = Object.values(roomData.players);
@@ -85,16 +114,33 @@ export const GameProvider = ({ children }) => {
       if (roomData.gameState) {
         const gs = roomData.gameState;
         setGameState(gs.status || 'lobby');
-        if (gs.cards) setCards(gs.cards);
-        if (gs.currentTeam) setCurrentTeam(gs.currentTeam);
-        if (gs.selectedTheme) setSelectedThemeState(gs.selectedTheme);
-        if (gs.winner) setWinner(gs.winner);
-        if (gs.timeLeft !== undefined) setTimeLeft(gs.timeLeft);
-        if (gs.timerRunning !== undefined) setTimerRunning(gs.timerRunning);
-        if (gs.guessesLeft !== undefined) setGuessesLeft(gs.guessesLeft);
-        setLastEvent(gs.lastEvent || null);
+
+        if (activeGame === 'codenames') {
+          setCards(gs.cards || []);
+          setCurrentTeam(gs.currentTeam || 'black');
+          if (gs.selectedTheme) {
+            setSelectedThemeState(gs.selectedTheme);
+          }
+          setWinner(gs.winner || null);
+          setTimeLeft(gs.timeLeft ?? 30);
+          setTimerRunning(Boolean(gs.timerRunning));
+          setGuessesLeft(gs.guessesLeft ?? 0);
+          setLastEvent(gs.lastEvent || null);
+          resetWhoAmIState();
+        } else if (activeGame === 'whoami') {
+          setWhoAmIAssignments(gs.assignments || {});
+          setWhoAmINotes(gs.notes || {});
+          setLastEvent(gs.lastEvent || null);
+          resetCodenamesState();
+        } else {
+          resetCodenamesState();
+          resetWhoAmIState();
+        }
       } else {
+        setGameState('lobby');
         setLastEvent(null);
+        resetCodenamesState();
+        resetWhoAmIState();
       }
 
       // Синхронизируем тему для лобби (если игра еще не запущена)
@@ -103,7 +149,7 @@ export const GameProvider = ({ children }) => {
       }
 
       // Синхронизируем подсказки
-      if (roomData.hints) {
+      if (activeGame === 'codenames' && roomData.hints) {
         const hintsList = Object.values(roomData.hints).sort((a, b) => b.id - a.id);
         setHints(hintsList);
       } else {
@@ -118,19 +164,19 @@ export const GameProvider = ({ children }) => {
     return () => {
       off(roomRef);
     };
-  }, []);
+  }, [resetCodenamesState, resetWhoAmIState]);
 
   // Таймер
   useEffect(() => {
     let interval;
-    if (timerRunning && timeLeft > 0 && roomId) {
+    if (selectedGame === 'codenames' && timerRunning && timeLeft > 0 && roomId) {
       ensureAuth().catch(() => null);
       interval = setInterval(() => {
         setTimeLeft(prev => {
           const newTime = prev - 1;
           if (newTime <= 0) {
             setTimerRunning(false);
-            const nextTeam = currentTeam === 'red' ? 'blue' : 'red';
+            const nextTeam = currentTeam === 'black' ? 'white' : 'black';
             update(ref(db, `rooms/${roomId}/gameState`), {
               timerRunning: false,
               timeLeft: 0,
@@ -154,7 +200,7 @@ export const GameProvider = ({ children }) => {
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [timerRunning, timeLeft, roomId, currentTeam]);
+  }, [selectedGame, timerRunning, timeLeft, roomId, currentTeam]);
 
   // Добавить игрока
   const addPlayer = async (name) => {
@@ -232,18 +278,22 @@ export const GameProvider = ({ children }) => {
     if (!roomId) return;
     await ensureAuth();
 
-    const redTeam = players.filter(p => p.team === 'red');
-    const blueTeam = players.filter(p => p.team === 'blue');
+    if (selectedGame !== 'codenames') {
+      return;
+    }
+
+    const blackTeam = players.filter(p => p.team === 'black');
+    const whiteTeam = players.filter(p => p.team === 'white');
     
-    if (redTeam.length === 0 || blueTeam.length === 0) {
+    if (blackTeam.length === 0 || whiteTeam.length === 0) {
       alert('Обе команды должны иметь хотя бы одного игрока!');
       return;
     }
 
-    const redCaptain = redTeam.find(p => p.isCaptain);
-    const blueCaptain = blueTeam.find(p => p.isCaptain);
+    const blackCaptain = blackTeam.find(p => p.isCaptain);
+    const whiteCaptain = whiteTeam.find(p => p.isCaptain);
 
-    if (!redCaptain || !blueCaptain) {
+    if (!blackCaptain || !whiteCaptain) {
       alert('В каждой команде должен быть капитан!');
       return;
     }
@@ -253,26 +303,25 @@ export const GameProvider = ({ children }) => {
       return;
     }
 
-    // Капитан подтверждает готовность к старту.
     await update(ref(db, `rooms/${roomId}/players/${currentPlayer.id}`), {
       readyToStart: true
     });
 
-    const redReady = redCaptain.readyToStart || redCaptain.id === currentPlayer.id;
-    const blueReady = blueCaptain.readyToStart || blueCaptain.id === currentPlayer.id;
+    const blackReady = blackCaptain.readyToStart || blackCaptain.id === currentPlayer.id;
+    const whiteReady = whiteCaptain.readyToStart || whiteCaptain.id === currentPlayer.id;
 
-    if (!redReady || !blueReady) {
+    if (!blackReady || !whiteReady) {
       alert('Готовность принята. Ожидаем подтверждение второго капитана.');
       return;
     }
 
     const themeWords = getThemeWords(selectedTheme);
     const newCards = generateCards(themeWords);
-    const firstTeam = Math.random() < 0.5 ? 'red' : 'blue';
+    const firstTeam = Math.random() < 0.5 ? 'black' : 'white';
 
-    // Публикуем состояние игры в Firebase
     await set(ref(db, `rooms/${roomId}/gameState`), {
       status: 'playing',
+      mode: 'codenames',
       cards: newCards,
       currentTeam: firstTeam,
       selectedTheme,
@@ -283,13 +332,66 @@ export const GameProvider = ({ children }) => {
       lastEvent: {
         id: Date.now(),
         type: 'start',
-        message: `Игра началась. Первыми ходят ${firstTeam === 'red' ? 'красные' : 'синие'}.`,
+        message: `Игра началась. Первыми ходят ${firstTeam === 'black' ? 'чёрные' : 'белые'}.`,
         team: firstTeam
       },
       startedAt: Date.now()
     });
 
+    await update(ref(db, `rooms/${roomId}`), {
+      status: 'playing'
+    });
+
     // Очищаем подсказки
+    await set(ref(db, `rooms/${roomId}/hints`), {});
+  };
+
+  const startWhoAmIGame = async () => {
+    if (!roomId) return;
+    await ensureAuth();
+
+    if (selectedGame !== 'whoami') {
+      return;
+    }
+
+    if (!currentPlayer) {
+      alert('Сначала войдите в комнату.');
+      return;
+    }
+
+    if (players.length < 2) {
+      alert('Для игры "Кто я" нужно минимум 2 игрока.');
+      return;
+    }
+
+    await set(ref(db, `rooms/${roomId}/gameState`), {
+      status: 'playing',
+      mode: 'whoami',
+      assignments: {},
+      notes: {},
+      lastEvent: {
+        id: Date.now(),
+        type: 'start',
+        message: 'Игра "Кто я" началась. Распределяйте слова по игрокам.',
+      },
+      startedAt: Date.now()
+    });
+
+    await update(ref(db, `rooms/${roomId}`), {
+      status: 'playing'
+    });
+  };
+
+  const selectGame = async (gameId) => {
+    if (!roomId) return;
+    await ensureAuth();
+
+    await update(ref(db, `rooms/${roomId}`), {
+      selectedGame: gameId,
+      status: 'waiting',
+      gameState: createLobbyState(gameId)
+    });
+
     await set(ref(db, `rooms/${roomId}/hints`), {});
   };
 
@@ -306,7 +408,7 @@ export const GameProvider = ({ children }) => {
 
   // Открыть карту
   const revealCard = async (cardId) => {
-    if (!roomId || gameState !== 'playing') return;
+    if (!roomId || gameState !== 'playing' || selectedGame !== 'codenames') return;
     await ensureAuth();
 
     if (!currentPlayer) {
@@ -333,9 +435,8 @@ export const GameProvider = ({ children }) => {
     }
 
     const selectedWord = card.word;
-    const updatedCards = card.type === 'neutral'
-      ? cards.filter((c) => c.id !== cardId)
-      : cards.map((c) => (c.id === cardId ? { ...c, revealed: true } : c));
+    // Нейтральная карта остаётся на поле как пустое место (reserved), не удаляем
+    const updatedCards = cards.map((c) => (c.id === cardId ? { ...c, revealed: true } : c));
 
     // Проверяем победу
     const gameWinner = checkWinner(updatedCards);
@@ -343,7 +444,7 @@ export const GameProvider = ({ children }) => {
 
     if (gameWinner) {
       if (gameWinner.type === 'bomb') {
-        newWinner = currentTeam === 'red' ? 'blue' : 'red';
+        newWinner = currentTeam === 'black' ? 'white' : 'black';
       } else {
         newWinner = gameWinner;
       }
@@ -356,7 +457,7 @@ export const GameProvider = ({ children }) => {
         id: Date.now(),
         type: card.type === 'neutral' ? 'neutral' : 'pick',
         message: card.type === 'neutral'
-          ? `Выбрано: ${selectedWord}. Нейтральная карта убрана с поля.`
+          ? `Выбрано: ${selectedWord}. Нейтральная карта открыта.`
           : `Выбрано: ${selectedWord}`,
         team: currentTeam
       }
@@ -364,7 +465,7 @@ export const GameProvider = ({ children }) => {
 
     // Ошиблись (нейтральная/чужая/мина) -> ход переходит сразу.
     if (card.type !== currentTeam) {
-      const nextTeam = currentTeam === 'red' ? 'blue' : 'red';
+      const nextTeam = currentTeam === 'black' ? 'white' : 'black';
       updates.currentTeam = nextTeam;
       updates.timerRunning = false;
       updates.timeLeft = 30;
@@ -382,7 +483,7 @@ export const GameProvider = ({ children }) => {
 
       // Угадали все слова по подсказке -> автопереход хода.
       if (nextGuessesLeft === 0) {
-        const nextTeam = currentTeam === 'red' ? 'blue' : 'red';
+        const nextTeam = currentTeam === 'black' ? 'white' : 'black';
         updates.currentTeam = nextTeam;
         updates.timerRunning = false;
         updates.timeLeft = 30;
@@ -404,7 +505,7 @@ export const GameProvider = ({ children }) => {
       updates.lastEvent = {
         id: Date.now(),
         type: 'win',
-        message: `${newWinner === 'red' ? 'Красная' : 'Синяя'} команда победила!`,
+        message: `${newWinner === 'black' ? 'Черная' : 'Белая'} команда победила!`,
         team: newWinner
       };
     }
@@ -414,7 +515,7 @@ export const GameProvider = ({ children }) => {
 
   // Дать подсказку
   const giveHint = async (word, count) => {
-    if (!roomId) return;
+    if (!roomId || selectedGame !== 'codenames') return;
     await ensureAuth();
 
     if (!currentPlayer || !currentPlayer.isCaptain) {
@@ -455,10 +556,10 @@ export const GameProvider = ({ children }) => {
 
   // Закончить ход
   const endTurn = async () => {
-    if (!roomId) return;
+    if (!roomId || selectedGame !== 'codenames') return;
     await ensureAuth();
 
-    const nextTeam = currentTeam === 'red' ? 'blue' : 'red';
+    const nextTeam = currentTeam === 'black' ? 'white' : 'black';
     await update(ref(db, `rooms/${roomId}/gameState`), {
       currentTeam: nextTeam,
       timerRunning: false,
@@ -473,32 +574,84 @@ export const GameProvider = ({ children }) => {
     });
   };
 
+  const assignWhoAmIWord = async (targetPlayerId, word) => {
+    if (!roomId || selectedGame !== 'whoami') return;
+    await ensureAuth();
+
+    if (!currentPlayer) {
+      alert('Сначала войдите в комнату.');
+      return;
+    }
+
+    if (currentPlayer.id === targetPlayerId) {
+      alert('Нельзя назначать слово самому себе.');
+      return;
+    }
+
+    const cleanWord = word.trim();
+    await set(
+      ref(db, `rooms/${roomId}/gameState/assignments/${targetPlayerId}`),
+      cleanWord
+        ? {
+            word: cleanWord,
+            updatedBy: currentPlayer.id,
+            updatedByName: currentPlayer.name,
+            updatedAt: Date.now()
+          }
+        : null
+    );
+  };
+
+  const updateWhoAmINote = async (note) => {
+    if (!roomId || selectedGame !== 'whoami') return;
+    await ensureAuth();
+
+    if (!currentPlayer) {
+      alert('Сначала войдите в комнату.');
+      return;
+    }
+
+    await set(ref(db, `rooms/${roomId}/gameState/notes/${currentPlayer.id}`), {
+      text: note,
+      updatedAt: Date.now()
+    });
+  };
+
   // Новая игра
   const resetGame = async () => {
     if (!roomId) return;
     await ensureAuth();
 
-    await update(ref(db, `rooms/${roomId}/gameState`), {
-      status: 'lobby',
-      cards: [],
-      currentTeam: 'red',
-      winner: null,
-      timeLeft: 30,
-      timerRunning: false,
-      guessesLeft: 0,
-      lastEvent: null
-    });
+    if (selectedGame === 'codenames') {
+      await set(ref(db, `rooms/${roomId}/gameState`), {
+        status: 'lobby',
+        mode: 'codenames',
+        cards: [],
+        currentTeam: 'black',
+        winner: null,
+        timeLeft: 30,
+        timerRunning: false,
+        guessesLeft: 0,
+        lastEvent: null,
+        selectedTheme
+      });
+
+      const readinessUpdates = {};
+      players.forEach((p) => {
+        readinessUpdates[`rooms/${roomId}/players/${p.id}/readyToStart`] = false;
+      });
+      if (Object.keys(readinessUpdates).length > 0) {
+        await update(ref(db), readinessUpdates);
+      }
+    } else {
+      await set(ref(db, `rooms/${roomId}/gameState`), createLobbyState(selectedGame));
+    }
 
     await set(ref(db, `rooms/${roomId}/hints`), {});
 
-    // На новую игру капитаны подтверждают готовность заново.
-    const readinessUpdates = {};
-    players.forEach((p) => {
-      readinessUpdates[`rooms/${roomId}/players/${p.id}/readyToStart`] = false;
+    await update(ref(db, `rooms/${roomId}`), {
+      status: 'waiting'
     });
-    if (Object.keys(readinessUpdates).length > 0) {
-      await update(ref(db), readinessUpdates);
-    }
   };
 
   // Покинуть комнату
@@ -518,6 +671,7 @@ export const GameProvider = ({ children }) => {
 
     setRoomId(null);
     setCurrentPlayer(null);
+    setSelectedGame(null);
     setSynced(false);
   }, [getPlayerStorageKey]);
 
@@ -554,6 +708,7 @@ export const GameProvider = ({ children }) => {
 
   const value = {
     gameState,
+    selectedGame,
     players,
     currentPlayer,
     cards,
@@ -565,20 +720,26 @@ export const GameProvider = ({ children }) => {
     timerRunning,
     guessesLeft,
     lastEvent,
+    whoAmIAssignments,
+    whoAmINotes,
     roomId,
     synced,
     addPlayer,
     joinTeam,
     becomeCaptain,
     startGame,
+    startWhoAmIGame,
     revealCard,
     giveHint,
     endTurn,
     resetGame,
+    selectGame,
     selectTheme,
+    assignWhoAmIWord,
+    updateWhoAmINote,
     syncWithFirebase,
     leaveRoom,
-    remaining: countRemaining(cards)
+    remaining: selectedGame === 'codenames' ? countRemaining(cards) : EMPTY_REMAINING
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

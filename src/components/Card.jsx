@@ -29,9 +29,15 @@ const Card = ({ card }) => {
     return classes;
   };
 
+  // Для нейтральной открытой карточки — показываем пустое место
+  const isNeutralRevealed = card.revealed && card.type === 'neutral';
   return (
     <div className={getCardClass()} onClick={handleClick}>
-      <span className="card-word">{card.word}</span>
+      {isNeutralRevealed ? (
+        <span className="card-neutral-placeholder"></span>
+      ) : (
+        <span className="card-word">{card.word}</span>
+      )}
       {card.revealed && card.type === 'bomb' && <span className="bomb-icon">💣</span>}
     </div>
   );

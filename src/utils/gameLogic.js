@@ -9,10 +9,10 @@ export function generateCards(words) {
   const shuffled = [...availableWords].sort(() => Math.random() - 0.5);
   const selectedWords = shuffled.slice(0, 28);
   
-  // Создаем массив типов карт
+  // Создаем массив типов карт (черная / белая команда)
   const cardTypes = [
-    ...Array(9).fill('red'),
-    ...Array(9).fill('blue'),
+    ...Array(9).fill('black'),
+    ...Array(9).fill('white'),
     'bomb',
     ...Array(9).fill('neutral')
   ];
@@ -31,25 +31,24 @@ export function generateCards(words) {
 
 // Проверка победы
 export function checkWinner(cards) {
-  const redRevealed = cards.filter(c => c.type === 'red' && c.revealed).length;
-  const blueRevealed = cards.filter(c => c.type === 'blue' && c.revealed).length;
+  const blackRevealed = cards.filter(c => c.type === 'black' && c.revealed).length;
+  const whiteRevealed = cards.filter(c => c.type === 'white' && c.revealed).length;
   const bombRevealed = cards.find(c => c.type === 'bomb' && c.revealed);
   
   if (bombRevealed) {
-    // Команда попала на бомбу - победа противника
     return bombRevealed;
   }
   
-  if (redRevealed === 9) return 'red';
-  if (blueRevealed === 9) return 'blue';
+  if (blackRevealed === 9) return 'black';
+  if (whiteRevealed === 9) return 'white';
   
   return null;
 }
 
 // Подсчет оставшихся слов
 export function countRemaining(cards) {
-  const redRemaining = cards.filter(c => c.type === 'red' && !c.revealed).length;
-  const blueRemaining = cards.filter(c => c.type === 'blue' && !c.revealed).length;
+  const blackRemaining = cards.filter(c => c.type === 'black' && !c.revealed).length;
+  const whiteRemaining = cards.filter(c => c.type === 'white' && !c.revealed).length;
   
-  return { red: redRemaining, blue: blueRemaining };
+  return { black: blackRemaining, white: whiteRemaining };
 }

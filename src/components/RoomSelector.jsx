@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RoomService } from '../utils/firebase';
+import { getGameById } from '../utils/games';
 
 const RoomSelector = () => {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ const RoomSelector = () => {
       const roomId = await RoomService.createRoom({
         status: 'waiting',
         players: {},
+        selectedGame: null,
         gameState: null,
         createdAt: Date.now()
       });
@@ -54,13 +56,13 @@ const RoomSelector = () => {
   return (
     <div className="room-selector">
       <div className="room-selector-container">
-        <h1>🎮 CodeNames Online</h1>
-        <p className="subtitle">Выберите или создайте комнату для игры</p>
+        <h1>🎮 Game Room Hub</h1>
+        <p className="subtitle">Создавайте комнаты, выбирайте игру и запускайте раунды вместе</p>
 
         <div className="room-actions">
           <div className="action-card">
             <h2>Создать новую комнату</h2>
-            <p>Создайте приватную комнату и пригласите друзей</p>
+            <p>Создайте приватную комнату, а тип игры выберете уже внутри лобби</p>
             <button 
               className="btn btn-large btn-primary" 
               onClick={createRoom}
@@ -74,7 +76,7 @@ const RoomSelector = () => {
 
           <div className="action-card">
             <h2>Присоединиться к комнате</h2>
-            <p>Введите код комнаты от друга</p>
+            <p>Введите код комнаты или откройте активную комнату ниже</p>
             <div className="join-form">
               <input
                 type="text"
@@ -106,6 +108,9 @@ const RoomSelector = () => {
                     <div className="room-players">
                       👥 Игроков: {Object.keys(room.players || {}).length}
                     </div>
+                    <div className="room-game">
+                      🕹️ Игра: {getGameById(room.selectedGame)?.shortName || 'не выбрана'}
+                    </div>
                     <div className="room-status">
                       {room.status === 'waiting' ? '⏳ Ожидание' : '🎮 Игра идёт'}
                     </div>
@@ -123,12 +128,12 @@ const RoomSelector = () => {
         )}
 
         <div className="room-info-section">
-          <h3>ℹ️ Как играть?</h3>
+          <h3>ℹ️ Как это работает?</h3>
           <ol>
             <li>Создайте комнату или присоединитесь к существующей</li>
             <li>Поделитесь кодом комнаты с друзьями</li>
-            <li>Разделитесь на 2 команды и выберите капитанов</li>
-            <li>Начните игру и веселитесь!</li>
+            <li>Внутри комнаты выберите нужную игру</li>
+            <li>Настройте режим и запустите раунд</li>
           </ol>
         </div>
       </div>

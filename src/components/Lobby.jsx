@@ -1,9 +1,23 @@
 import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { getThemesList } from '../utils/themes';
+import { GAME_OPTIONS } from '../utils/games';
 
 const Lobby = () => {
-  const { players, currentPlayer, addPlayer, joinTeam, becomeCaptain, startGame, selectedTheme, selectTheme, synced } = useGame();
+  const {
+    players,
+    currentPlayer,
+    addPlayer,
+    joinTeam,
+    becomeCaptain,
+    startGame,
+    startWhoAmIGame,
+    selectedTheme,
+    selectTheme,
+    selectedGame,
+    selectGame,
+    synced
+  } = useGame();
   const [nameInput, setNameInput] = useState('');
   const themes = getThemesList();
 
@@ -19,62 +33,88 @@ const Lobby = () => {
     }
   };
 
-  const redTeam = players.filter(p => p.team === 'red');
-  const blueTeam = players.filter(p => p.team === 'blue');
+  const blackTeam = players.filter(p => p.team === 'black');
+  const whiteTeam = players.filter(p => p.team === 'white');
   const waiting = players.filter(p => !p.team);
-  const redCaptain = redTeam.find(p => p.isCaptain);
-  const blueCaptain = blueTeam.find(p => p.isCaptain);
+  const blackCaptain = blackTeam.find(p => p.isCaptain);
+  const whiteCaptain = whiteTeam.find(p => p.isCaptain);
 
-  const bothCaptainsReady = Boolean(redCaptain?.readyToStart && blueCaptain?.readyToStart);
+  const bothCaptainsReady = Boolean(blackCaptain?.readyToStart && whiteCaptain?.readyToStart);
   const isCurrentPlayerCaptain = Boolean(currentPlayer?.isCaptain);
   const isCurrentCaptainReady = Boolean(currentPlayer?.readyToStart);
 
-  const canStart = redTeam.length > 0 && blueTeam.length > 0 &&
-                   redTeam.some(p => p.isCaptain) && blueTeam.some(p => p.isCaptain);
+  const canStart = blackTeam.length > 0 && whiteTeam.length > 0 &&
+                   blackTeam.some(p => p.isCaptain) && whiteTeam.some(p => p.isCaptain);
+  const canStartWhoAmI = players.length >= 2 && Boolean(currentPlayer);
 
-  return (
-    <div className="lobby">
-      <div className="lobby-header">
-        <h1>🎮 CodeNames - Лобби</h1>
-        {!currentPlayer ? (
-          <form onSubmit={handleJoin} className="join-form">
-            <input
-              type="text"
-              value={nameInput}
-              onChange={(e) => setNameInput(e.target.value)}
-              placeholder="Введите ваше имя..."
-              maxLength={20}
-              disabled={!synced}
-            />
-            <button type="submit" className="btn btn-primary" disabled={!synced}>
-              {synced ? 'Войти в игру' : 'Подключение к комнате...'}
-            </button>
-          </form>
-        ) : (
-          <div className="player-info">
-            <p>Добро пожаловать, <strong>{currentPlayer.name}</strong>!</p>
-            {!currentPlayer.team && (
-              <p className="hint-text">Выберите команду ниже</p>
-            )}
-          </div>
+  const renderJoinBlock = () => (
+    !currentPlayer ? (
+      <form onSubmit={handleJoin} className="join-form">
+        <input
+          type="text"
+          value={nameInput}
+          onChange={(e) => setNameInput(e.target.value)}
+          placeholder="Введите ваше имя..."
+          maxLength={20}
+          disabled={!synced}
+        />
+        <button type="submit" className="btn btn-primary" disabled={!synced}>
+          {synced ? 'Войти в комнату' : 'Подключение к комнате...'}
+        </button>
+      </form>
+    ) : (
+      <div className="player-info">
+        <p>Добро пожаловать, <strong>{currentPlayer.name}</strong>!</p>
+        {!selectedGame && <p className="hint-text">Сначала выберите игру для комнаты</p>}
+        {selectedGame === 'codenames' && !currentPlayer.team && (
+          <p className="hint-text">Выберите команду ниже</p>
+        )}
+        {selectedGame === 'whoami' && (
+          <p className="hint-text">После старта остальные игроки смогут назначать вам слово.</p>
         )}
       </div>
+    )
+  );
 
+  const renderGamePicker = () => (
+    <div className="game-picker">
+      <div className="section-heading">
+        <h2>Выбор игры</h2>
+        <p>Комната одна, режим можно переключать в лобби.</p>
+      </div>
+      <div className="game-picker-grid">
+        {GAME_OPTIONS.map((game) => (
+          <button
+            key={game.id}
+            className={`game-picker-card ${game.accent} ${selectedGame === game.id ? 'active' : ''}`}
+            onClick={() => selectGame(game.id)}
+            type="button"
+          >
+            <div className="game-picker-title">{game.name}</div>
+            <div className="game-picker-description">{game.description}</div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderCodenamesLobby = () => (
+    <>
       <div className="teams-container">
-        <div className="team-lobby red-team-lobby">
-          <h2>🔴 Красная команда</h2>
+        <div className="team-lobby black-team-lobby">
+          <h2>⚫ Черная команда</h2>
           <div className="team-members">
-            {redTeam.length === 0 ? (
+            {blackTeam.length === 0 ? (
               <p className="empty-team">Команда пуста</p>
             ) : (
-              redTeam.map(player => (
+              blackTeam.map(player => (
                 <div key={player.id} className={`player-card ${player.isCaptain ? 'captain' : ''}`}>
                   <span className="player-name">{player.name}</span>
                   {player.isCaptain && <span className="captain-badge">👑 Капитан</span>}
                   {currentPlayer && currentPlayer.id === player.id && !player.isCaptain && (
                     <button
                       className="btn-small"
-                      onClick={() => becomeCaptain(player.id, 'red')}
+                      onClick={() => becomeCaptain(player.id, 'black')}
                     >
                       Стать капитаном
                     </button>
@@ -83,30 +123,30 @@ const Lobby = () => {
               ))
             )}
           </div>
-          {currentPlayer && currentPlayer.team !== 'red' && (
+          {currentPlayer && currentPlayer.team !== 'black' && (
             <button
-              className="btn btn-team-red"
-              onClick={() => joinTeam(currentPlayer.id, 'red')}
+              className="btn btn-team-black"
+              onClick={() => joinTeam(currentPlayer.id, 'black')}
             >
               Присоединиться
             </button>
           )}
         </div>
 
-        <div className="team-lobby blue-team-lobby">
-          <h2>🔵 Синяя команда</h2>
+        <div className="team-lobby white-team-lobby">
+          <h2>⚪ Белая команда</h2>
           <div className="team-members">
-            {blueTeam.length === 0 ? (
+            {whiteTeam.length === 0 ? (
               <p className="empty-team">Команда пуста</p>
             ) : (
-              blueTeam.map(player => (
+              whiteTeam.map(player => (
                 <div key={player.id} className={`player-card ${player.isCaptain ? 'captain' : ''}`}>
                   <span className="player-name">{player.name}</span>
                   {player.isCaptain && <span className="captain-badge">👑 Капитан</span>}
                   {currentPlayer && currentPlayer.id === player.id && !player.isCaptain && (
                     <button
                       className="btn-small"
-                      onClick={() => becomeCaptain(player.id, 'blue')}
+                      onClick={() => becomeCaptain(player.id, 'white')}
                     >
                       Стать капитаном
                     </button>
@@ -115,10 +155,10 @@ const Lobby = () => {
               ))
             )}
           </div>
-          {currentPlayer && currentPlayer.team !== 'blue' && (
+          {currentPlayer && currentPlayer.team !== 'white' && (
             <button
-              className="btn btn-team-blue"
-              onClick={() => joinTeam(currentPlayer.id, 'blue')}
+              className="btn btn-team-white"
+              onClick={() => joinTeam(currentPlayer.id, 'white')}
             >
               Присоединиться
             </button>
@@ -163,7 +203,7 @@ const Lobby = () => {
           {canStart && (
             <p className="hint-text">
               Старт: оба капитана должны нажать кнопку.
-              Готовность: 🔴 {redCaptain?.readyToStart ? 'готов' : 'не готов'} | 🔵 {blueCaptain?.readyToStart ? 'готов' : 'не готов'}
+              Готовность: ⚫ {blackCaptain?.readyToStart ? 'готов' : 'не готов'} | ⚪ {whiteCaptain?.readyToStart ? 'готов' : 'не готов'}
             </p>
           )}
         </div>
@@ -181,6 +221,65 @@ const Lobby = () => {
             : 'Капитан: подтвердить готовность'}
         </button>
       </div>
+    </>
+  );
+
+  const renderWhoAmILobby = () => (
+    <div className="whoami-lobby">
+      <div className="section-heading">
+        <h2>Лобби игры «Кто я»</h2>
+        <p>После старта у каждого игрока будет своя колонка. Остальные смогут назначать ему слово, а сам игрок увидит только свои заметки.</p>
+      </div>
+
+      <div className="whoami-lobby-grid">
+        {players.map((player) => (
+          <div key={player.id} className={`whoami-player-tile ${currentPlayer?.id === player.id ? 'self' : ''}`}>
+            <div className="player-name">{player.name}</div>
+            <div className="whoami-player-meta">
+              {currentPlayer?.id === player.id ? 'Это вы' : 'Получит слово от остальных'}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="lobby-footer">
+        <div className="lobby-info">
+          {!canStartWhoAmI && (
+            <p className="warning-text">⚠️ Для старта нужны минимум 2 игрока и ваш вход в комнату</p>
+          )}
+          {canStartWhoAmI && (
+            <p className="hint-text">После старта любой участник сможет назначать или менять слова другим игрокам.</p>
+          )}
+        </div>
+        <button
+          className="btn btn-large btn-start"
+          onClick={startWhoAmIGame}
+          disabled={!canStartWhoAmI}
+        >
+          Начать «Кто я»
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="lobby">
+      <div className="lobby-header">
+        <h1>🎮 Игровое лобби</h1>
+        {renderJoinBlock()}
+      </div>
+
+      {renderGamePicker()}
+
+      {!selectedGame && (
+        <div className="empty-game-state">
+          <h2>Выберите режим выше</h2>
+          <p>После выбора игра настроится для всей комнаты.</p>
+        </div>
+      )}
+
+      {selectedGame === 'codenames' && renderCodenamesLobby()}
+      {selectedGame === 'whoami' && renderWhoAmILobby()}
     </div>
   );
 };

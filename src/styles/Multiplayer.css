@@ -131,6 +131,10 @@
   color: #666;
 }
 
+.room-game {
+  color: #666;
+}
+
 .room-info-section {
   background: #e3f2fd;
   padding: 25px;
@@ -189,6 +193,14 @@
   font-weight: bold;
   letter-spacing: 2px;
   font-family: monospace;
+}
+
+.room-game-chip {
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #4051b5;
+  font-weight: 700;
 }
 
 .btn-copy {

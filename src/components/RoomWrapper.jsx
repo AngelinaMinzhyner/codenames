@@ -4,11 +4,12 @@ import { RoomService } from '../utils/firebase';
 import Lobby from './Lobby';
 import Game from './Game';
 import { useGame } from '../context/GameContext';
+import { getGameById } from '../utils/games';
 
 const RoomWrapper = () => {
   const { roomId } = useParams();
   const navigate = useNavigate();
-  const { gameState, syncWithFirebase, leaveRoom } = useGame();
+  const { gameState, selectedGame, syncWithFirebase, leaveRoom } = useGame();
   const [roomExists, setRoomExists] = useState(true);
   const [roomCode, setRoomCode] = useState('');
   const [copied, setCopied] = useState(false);
@@ -81,6 +82,9 @@ const RoomWrapper = () => {
         <div className="room-code-display">
           <span className="label">Код комнаты:</span>
           <span className="code">{roomCode}</span>
+          <span className="room-game-chip">
+            {getGameById(selectedGame)?.shortName || 'Выбор игры'}
+          </span>
           <button 
             className={`btn-copy ${copied ? 'copied' : ''}`}
             onClick={copyRoomCode}

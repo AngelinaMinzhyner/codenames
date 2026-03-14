@@ -1,13 +1,14 @@
 import React from 'react';
 import { useGame } from '../context/GameContext';
 
-const HintsList = () => {
+const HintsList = ({ team }) => {
   const { hints, currentTeam } = useGame();
+  const teamHints = team ? hints.filter(h => h.team === team) : hints;
 
-  if (hints.length === 0) {
+  if (teamHints.length === 0) {
     return (
       <div className="hints-list">
-        <h3>📝 История подсказок</h3>
+        <h3>📝 Подсказки</h3>
         <p className="empty-hints">Подсказок пока нет</p>
       </div>
     );
@@ -15,16 +16,16 @@ const HintsList = () => {
 
   return (
     <div className="hints-list">
-      <h3>📝 История подсказок</h3>
+      <h3>📝 Подсказки</h3>
       <div className="hints-container">
-        {hints.map(hint => (
-          <div 
-            key={hint.id} 
+        {teamHints.map(hint => (
+          <div
+            key={hint.id}
             className={`hint-item hint-${hint.team} ${hint.team === currentTeam ? 'current' : ''}`}
           >
             <div className="hint-header">
               <span className="hint-team">
-                {hint.team === 'red' ? '🔴' : '🔵'}
+                {hint.team === 'black' ? '⚫' : '⚪'}
               </span>
               <span className="hint-captain">{hint.captainName}</span>
             </div>
