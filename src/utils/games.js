@@ -12,6 +12,13 @@ export const GAME_OPTIONS = [
     shortName: 'Кто я',
     description: 'Игроки получают слова от остальных и ведут свои личные заметки.',
     accent: 'game-whoami'
+  },
+  {
+    id: 'spy',
+    name: 'Шпион',
+    shortName: 'Шпион',
+    description: 'Один не знает общего персонажа по теме — остальные в курсе. Играйте устно без лишних действий в приложении.',
+    accent: 'game-spy'
   }
 ];
 

@@ -2,8 +2,10 @@ import { getThemeWords } from './themes';
 
 // Генерация игрового поля
 export function generateCards(words) {
-  // Если words не предоставлены, используем стандартные слова
-  const availableWords = words || getThemeWords('classic');
+  let availableWords = words && words.length ? words : getThemeWords('classic');
+  if (availableWords.length < 28) {
+    availableWords = getThemeWords('classic');
+  }
   
   // Выбираем 28 случайных слов
   const shuffled = [...availableWords].sort(() => Math.random() - 0.5);

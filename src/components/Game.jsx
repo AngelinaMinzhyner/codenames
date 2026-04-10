@@ -3,6 +3,7 @@ import { useGame } from '../context/GameContext';
 import Card from './Card';
 import HintsList from './HintsList';
 import WhoAmIGame from './WhoAmIGame';
+import SpyGame from './SpyGame';
 
 const Game = () => {
   const {
@@ -47,6 +48,10 @@ const Game = () => {
 
   if (selectedGame === 'whoami') {
     return <WhoAmIGame />;
+  }
+
+  if (selectedGame === 'spy') {
+    return <SpyGame />;
   }
 
   const blackPlayers = players.filter(p => p.team === 'black');

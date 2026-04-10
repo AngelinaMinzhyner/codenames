@@ -259,6 +259,137 @@ export const THEMES = {
 ]
   },
   
+  dota2: {
+    name: 'Dota 2',
+    difficulty: '—',
+    words: [ "Abaddon", "Alchemist", "Ancient Apparition", "Anti-Mage", "Arc Warden", "Axe", 
+      "Bane", "Batrider", "Beastmaster", "Bloodseeker", "Bounty Hunter", "Brewmaster", 
+      "Bristleback", "Broodmother", "Centaur Warrunner", "Chaos Knight", "Chen", 
+      "Clinkz", "Clockwerk", "Crystal Maiden", "Dark Seer", "Dark Willow", "Dawnbreaker", 
+      "Dazzle", "Death Prophet", "Disruptor", "Doom", "Dragon Knight", "Drow Ranger", 
+      "Earth Spirit", "Earthshaker", "Elder Titan", "Ember Spirit", "Enchantress", 
+      "Enigma", "Faceless Void", "Grimstroke", "Gyrocopter", "Hoodwink", "Huskar", 
+      "Invoker", "Io", "Jakiro", "Juggernaut", "Kez", "Keeper of the Light", "Kunkka", 
+      "Legion Commander", "Leshrac", "Lich", "Lifestealer", "Lina", "Lion", "Lone Druid", 
+      "Luna", "Lycan", "Magnus", "Marci", "Mars", "Medusa", "Meepo", "Mirana", "Monkey King", 
+      "Morphling", "Muerta", "Naga Siren", "Nature's Prophet", "Necrophos", "Night Stalker", 
+      "Nyx Assassin", "Ogre Magi", "Omniknight", "Oracle", "Outworld Destroyer", 
+      "Pangolier", "Phantom Assassin", "Phantom Lancer", "Phoenix", "Primal Beast", 
+      "Puck", "Pudge", "Pugna", "Queen of Pain", "Razor", "Riki", "Rubick", "Sand King", 
+      "Shadow Demon", "Shadow Fiend", "Shadow Shaman", "Silencer", "Skywrath Mage", 
+      "Slardar", "Slark", "Snapfire", "Sniper", "Spectre", "Spirit Breaker", "Storm Spirit", 
+      "Sven", "Techies", "Templar Assassin", "Terrorblade", "Tidehunter", "Timbersaw", 
+      "Tinker", "Tiny", "Treant Protector", "Troll Warlord", "Tusk", "Underlord", 
+      "Undying", "Ursa", "Vengeful Spirit", "Venomancer", "Viper", "Visage", "Void Spirit", 
+      "Warlock", "Weaver", "Windranger", "Winter Wyvern", "Witch Doctor", "Wraith King", 
+      "Zeus"]
+  },
+  footballers: {
+    name: 'Футболисты',
+    difficulty: '—',
+    words: ["Lionel Messi", "Cristiano Ronaldo", "Kylian Mbappe", "Erling Haaland", "Jude Bellingham", 
+    "Vinicius Junior", "Kevin De Bruyne", "Mohamed Salah", "Harry Kane", "Robert Lewandowski", 
+    "Lamine Yamal", "Bukayo Saka", "Phil Foden", "Rodri", "Antoine Griezmann", 
+    "Luka Modric", "Neymar Jr", "Bruno Fernandes", "Cole Palmer", "Virgil van Dijk", 
+    "Alisson Becker", "Thibaut Courtois", "Bernardo Silva", "Lautaro Martinez", "Florian Wirtz", 
+    "Jamal Musiala", "Heung-min Son", "Khvicha Kvaratskhelia", "Federico Valverde", "Victor Osimhen",
+    "Luis Diaz", "Alexis Mac Allister", "Declan Rice", "William Saliba", "Theo Hernandez",
+
+    // Легенды 21 века (Recent Legends)
+    "Zinedine Zidane", "Ronaldinho", "Ronaldo Nazario", "Andres Iniesta", "Xavi", 
+    "Thierry Henry", "Zlatan Ibrahimovic", "Kaka", "Sergio Ramos", "Manuel Neuer", 
+    "Gianluigi Buffon", "Dani Alves", "Wayne Rooney", "Karim Benzema", "Gareth Bale", 
+    "Luis Suarez", "Steven Gerrard", "Frank Lampard", "Andrea Pirlo", "Iker Casillas", 
+    "Carles Puyol", "Philipp Lahm", "Arjen Robben", "David Beckham", "Mesut Ozil", 
+    "Didier Drogba", "Samuel Eto'o", "Cesc Fabregas", "Bastian Schweinsteiger", "Paolo Maldini",
+
+    // Исторические иконы (All-time Icons)
+    "Pele", "Diego Maradona", "Johan Cruyff", "Franz Beckenbauer", "Michel Platini", 
+    "George Best", "Ferenc Puskas", "Lev Yashin", "Alfredo Di Stefano", "Eusebio", 
+    "Gerd Muller", "Garrincha", "Bobby Charlton", "Marco van Basten", "Ruud Gullit", 
+    "Roberto Baggio", "Romario", "Franco Baresi", "Socrates", "Zico",
+
+    // Дополнительные популярные игроки (Widely Known)
+    "Andriy Shevchenko", "Eric Cantona", "Alan Shearer", "Ryan Giggs", "Pavel Nedved", 
+    "Fabio Cannavaro", "Rio Ferdinand", "Nemanja Vidic", "Alessandro Del Piero", "Francesco Totti"]
+  },
+  media_personalities: {
+    name: 'Медиаперсонажи',
+    difficulty: '—',
+    words: ["MrBeast", "IShowSpeed", "Marques Brownlee", "Casey Neistat", "Logan Paul", 
+    "Jake Paul", "Emma Chamberlain", "Markiplier", "Jacksepticeye", "Dude Perfect", 
+    "Charli D'Amelio", "Khaby Lame", "Addison Rae", "Zach King", "Bella Poarch",
+
+    // Streamers (Twitch / Kick)
+    "Kai Cenat", "xQc", "Ibai", "Ninja", "Asmongold", 
+    "Pokimane", "Adin Ross", "Auronplay", "Rubius", "Ludwig", 
+    "Shroud", "Tyson TenZ", "Tarik", "Amouranth", "DrDisrespect",
+
+    // Singers & Musicians
+    "Taylor Swift", "The Weeknd", "Drake", "Ariana Grande", "Billie Eilish", 
+    "Justin Bieber", "Ed Sheeran", "Dua Lipa", "Harry Styles", "Post Malone", 
+    "Travis Scott", "Kanye West", "Eminem", "Rihanna", "Beyonce", 
+    "Lana Del Rey", "Bruno Mars", "SZA", "Doja Cat", "Bad Bunny",
+
+    // Actors & Hollywood Stars
+    "Tom Holland", "Zendaya", "Timothee Chalamet", "Cillian Murphy", "Robert Downey Jr", 
+    "Scarlett Johansson", "Margot Robbie", "Ryan Gosling", "Pedro Pascal", "Jenna Ortega", 
+    "Austin Butler", "Florence Pugh", "The Rock", "Chris Hemsworth", "Henry Cavill", 
+    "Leonardo DiCaprio", "Brad Pitt", "Keanu Reeves", "Tom Cruise", "Anya Taylor-Joy",
+
+    // СНГ Блогеры и Стримеры (CIS Region)
+    "Mellstroy", "Buster", "Evelone", "Marmok", "EdisonPts", 
+    "TheBrianMaps", "Kuplinov", "Zubarefff", "Hasbulla", "Wylsacom", 
+    "BadComedian", "Dunya", "Exile", "Koreshzy", "Paradeevich",
+
+    // СНГ Музыканты и Знаменитости
+    "Egor Kreed", "Morgenstern", "Instasamka", "Macan", "Anna Asti", 
+    "Jony", "Scriptonite", "Big Baby Tape", "L'One", "Slava Marlow", 
+    "Danya Milokhin", "Oxxxymiron", "Scally Milano", "Miyagi", "Andy Panda"]
+  },
+  anime_heroes: {
+    name: 'Аниме герои',
+    difficulty: '—',
+    words: ["Naruto", "One Piece", "Bleach", "Dragon Ball", "Death Note", "Attack on Titan",
+    "Fullmetal Alchemist", "Hunter x Hunter", "Neon Genesis Evangelion", "Cowboy Bebop",
+    
+    // Современные хиты (2024-2026)
+    "Jujutsu Kaisen", "Demon Slayer", "Chainsaw Man", "Spy x Family", "Oshi no Ko", 
+    "Solo Leveling", "Frieren: Beyond Journey's End", "Kaiju No. 8", "Dandadan", "Blue Lock",
+    "Hell's Paradise", "Gachiakuta", "Sakamoto Days", "Wind Breaker", "Witch Hat Atelier",
+
+    // Популярные и культовые
+    "My Hero Academia", "Tokyo Ghoul", "Black Clover", "JoJo's Bizarre Adventure", 
+    "Sword Art Online", "Cyberpunk: Edgerunners", "Vinland Saga", "Mob Psycho 100", 
+    "One Punch Man", "Haikyu!!", "Bungo Stray Dogs", "Re:Zero", "Steins;Gate", "Naruto Uzumaki", "Sasuke Uchiha", "Itachi Uchiha", "Luffy", "Zoro", "Ichigo Kurosaki",
+    "Goku", "Vegeta", "Satoru Gojo", "Yuji Itadori", "Yuta Okkotsu", "Tanjiro Kamado", 
+    "Zenitsu Agatsuma", "Levi Ackerman", "Eren Yeager", "Light Yagami", "L", 
+    "Denji", "Aki Hayakawa", "Sung Jinwoo", "Izuku Midoriya", "Bakugo", 
+    "Shoto Todoroki", "Edward Elric", "Killian Zoldyck", "Saitama", "Ken Kaneki",
+
+    // Женские персонажи
+    "Mikasa Ackerman", "Nezuko Kamado", "Power", "Makima", "Anya Forger", "Yor Forger",
+    "Frieren", "Fern", "Ai Hoshino", "Ruby Hoshino", "Nobara Kugisaki", "Maki Zenin",
+    "Hinata Hyuga", "Sakura Haruno", "Nami", "Robin", "Asuka Langley", "Rei Ayanami",
+    "Lucy (Edgerunners)", "Rebecca (Edgerunners)", "Jolyne Cujoh", "Marin Kitagawa"]
+  },
+  fighters: {
+    name: 'Бойцы',
+    difficulty: '—',
+    words: ["Islam Makhachev", "Jon Jones", "Alex Pereira", "Ilia Topuria", "Khamzat Chimaev", 
+    "Conor McGregor", "Max Holloway", "Sean O'Malley", "Tom Aspinall", "Merab Dvalishvili", 
+    "Charles Oliveira", "Dustin Poirier", "Justin Gaethje", "Israel Adesanya", "Petr Yan", 
+    "Shavkat Rakhmonov", "Arman Tsarukyan", "Alexander Volkanovski", "Dricus Du Plessis", "Leon Edwards",
+
+    // Boxing (Current Champions & Legends)
+    "Oleksandr Usyk", "Tyson Fury", "Canelo Alvarez", "Naoya Inoue", "Terence Crawford", 
+    "Anthony Joshua", "Dmitry Bivol", "Artur Beterbiev", "Gervonta Davis", "Ryan Garcia", 
+    "Devin Haney", "Shakur Stevenson", "Zhilei Zhang", "Daniel Dubois", "Jai Opetaia",
+
+    // All-time Legends (Icons)
+    "Mike Tyson", "Muhammad Ali", "Khabib Nurmagomedov", "Georges St-Pierre", "Anderson Silva", 
+    "Floyd Mayweather", "Manny Pacquiao", "Lennox Lewis", "Evander Holyfield", "Fedor Emelianenko"]
+  },
   animals: {
     name: '🦁 Дикие животные',
     difficulty: 'легкая',
@@ -297,6 +428,9 @@ export const THEMES = {
 ]
   },
 };
+
+/** Темы только для игры «Шпион» (лобби показывает только их). */
+export const SPY_THEME_IDS = ['dota2', 'footballers', 'media_personalities', 'anime_heroes', 'fighters'];
 
 export function getThemesList() {
   return Object.entries(THEMES).map(([key, theme]) => ({

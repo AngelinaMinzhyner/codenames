@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { generateCards, checkWinner, countRemaining } from '../utils/gameLogic';
 import { getThemeWords } from '../utils/themes';
+import { distributeSpyRoles } from '../utils/spyLogic';
 import { ensureAuth } from '../utils/firebase';
 import { ref, onValue, set, update, off } from 'firebase/database';
 import { db } from '../utils/firebase';
@@ -38,6 +39,8 @@ export const GameProvider = ({ children }) => {
   const [lastEvent, setLastEvent] = useState(null);
   const [whoAmIAssignments, setWhoAmIAssignments] = useState({});
   const [whoAmINotes, setWhoAmINotes] = useState({});
+  const [spyPlayerId, setSpyPlayerId] = useState(null);
+  const [spyCharacterByPlayer, setSpyCharacterByPlayer] = useState({});
   
   // Firebase
   const [roomId, setRoomId] = useState(null);
@@ -80,6 +83,11 @@ export const GameProvider = ({ children }) => {
   const resetWhoAmIState = useCallback(() => {
     setWhoAmIAssignments({});
     setWhoAmINotes({});
+  }, []);
+
+  const resetSpyState = useCallback(() => {
+    setSpyPlayerId(null);
+    setSpyCharacterByPlayer({});
   }, []);
 
   // Синхронизация с Firebase
@@ -127,20 +135,33 @@ export const GameProvider = ({ children }) => {
           setGuessesLeft(gs.guessesLeft ?? 0);
           setLastEvent(gs.lastEvent || null);
           resetWhoAmIState();
+          resetSpyState();
         } else if (activeGame === 'whoami') {
           setWhoAmIAssignments(gs.assignments || {});
           setWhoAmINotes(gs.notes || {});
           setLastEvent(gs.lastEvent || null);
           resetCodenamesState();
+          resetSpyState();
+        } else if (activeGame === 'spy') {
+          setSpyPlayerId(gs.spyPlayerId || null);
+          setSpyCharacterByPlayer(gs.characterByPlayer || {});
+          if (gs.selectedTheme) {
+            setSelectedThemeState(gs.selectedTheme);
+          }
+          setLastEvent(gs.lastEvent || null);
+          resetCodenamesState();
+          resetWhoAmIState();
         } else {
           resetCodenamesState();
           resetWhoAmIState();
+          resetSpyState();
         }
       } else {
         setGameState('lobby');
         setLastEvent(null);
         resetCodenamesState();
         resetWhoAmIState();
+        resetSpyState();
       }
 
       // Синхронизируем тему для лобби (если игра еще не запущена)
@@ -164,7 +185,7 @@ export const GameProvider = ({ children }) => {
     return () => {
       off(roomRef);
     };
-  }, [resetCodenamesState, resetWhoAmIState]);
+  }, [resetCodenamesState, resetWhoAmIState, resetSpyState]);
 
   // Таймер
   useEffect(() => {
@@ -373,6 +394,57 @@ export const GameProvider = ({ children }) => {
         id: Date.now(),
         type: 'start',
         message: 'Игра "Кто я" началась. Распределяйте слова по игрокам.',
+      },
+      startedAt: Date.now()
+    });
+
+    await update(ref(db, `rooms/${roomId}`), {
+      status: 'playing'
+    });
+  };
+
+  const startSpyGame = async () => {
+    if (!roomId) return;
+    await ensureAuth();
+
+    if (selectedGame !== 'spy') {
+      return;
+    }
+
+    if (!currentPlayer) {
+      alert('Сначала войдите в комнату.');
+      return;
+    }
+
+    if (players.length < 2) {
+      alert('Для игры «Шпион» нужно минимум 2 игрока.');
+      return;
+    }
+
+    const words = getThemeWords(selectedTheme);
+    if (!Array.isArray(words) || words.length === 0) {
+      alert('В выбранной теме пока нет персонажей. Заполните список в themes.js или выберите другую тему.');
+      return;
+    }
+
+    let distribution;
+    try {
+      distribution = distributeSpyRoles(players, words);
+    } catch (e) {
+      alert(e?.message || 'Не удалось распределить роли.');
+      return;
+    }
+
+    await set(ref(db, `rooms/${roomId}/gameState`), {
+      status: 'playing',
+      mode: 'spy',
+      selectedTheme,
+      spyPlayerId: distribution.spyPlayerId,
+      characterByPlayer: distribution.characterByPlayer,
+      lastEvent: {
+        id: Date.now(),
+        type: 'start',
+        message: 'Игра «Шпион» началась. Смотрите свою роль на экране.',
       },
       startedAt: Date.now()
     });
@@ -722,6 +794,8 @@ export const GameProvider = ({ children }) => {
     lastEvent,
     whoAmIAssignments,
     whoAmINotes,
+    spyPlayerId,
+    spyCharacterByPlayer,
     roomId,
     synced,
     addPlayer,
@@ -729,6 +803,7 @@ export const GameProvider = ({ children }) => {
     becomeCaptain,
     startGame,
     startWhoAmIGame,
+    startSpyGame,
     revealCard,
     giveHint,
     endTurn,

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
-import { getThemesList } from '../utils/themes';
+import { getThemesList, SPY_THEME_IDS } from '../utils/themes';
 import { GAME_OPTIONS } from '../utils/games';
 
 const Lobby = () => {
@@ -12,6 +12,7 @@ const Lobby = () => {
     becomeCaptain,
     startGame,
     startWhoAmIGame,
+    startSpyGame,
     selectedTheme,
     selectTheme,
     selectedGame,
@@ -20,6 +21,14 @@ const Lobby = () => {
   } = useGame();
   const [nameInput, setNameInput] = useState('');
   const themes = getThemesList();
+  const spyThemes = SPY_THEME_IDS.map((id) => themes.find((t) => t.id === id)).filter(Boolean);
+
+  useEffect(() => {
+    if (selectedGame !== 'spy' || !synced) return;
+    if (!SPY_THEME_IDS.includes(selectedTheme)) {
+      selectTheme(SPY_THEME_IDS[0]);
+    }
+  }, [selectedGame, selectedTheme, selectTheme, synced]);
 
   const handleJoin = async (e) => {
     e.preventDefault();
@@ -46,6 +55,7 @@ const Lobby = () => {
   const canStart = blackTeam.length > 0 && whiteTeam.length > 0 &&
                    blackTeam.some(p => p.isCaptain) && whiteTeam.some(p => p.isCaptain);
   const canStartWhoAmI = players.length >= 2 && Boolean(currentPlayer);
+  const canStartSpy = players.length >= 2 && Boolean(currentPlayer);
 
   const renderJoinBlock = () => (
     !currentPlayer ? (
@@ -71,6 +81,9 @@ const Lobby = () => {
         )}
         {selectedGame === 'whoami' && (
           <p className="hint-text">После старта остальные игроки смогут назначать вам слово.</p>
+        )}
+        {selectedGame === 'spy' && (
+          <p className="hint-text">Выберите тему и начните игру — роли и шпион назначаются случайно.</p>
         )}
       </div>
     )
@@ -224,6 +237,72 @@ const Lobby = () => {
     </>
   );
 
+  const renderSpyLobby = () => (
+    <div className="whoami-lobby spy-lobby">
+      <div className="section-heading">
+        <h2>Лобби «Шпион»</h2>
+        <p>
+          По выбранной теме большинство получает случайного персонажа. Один игрок — шпион и не знает персонажа.
+          Дальше играйте вживую, в приложении только роли.
+        </p>
+      </div>
+
+      <div className="whoami-lobby-grid">
+        {players.map((player) => (
+          <div key={player.id} className={`whoami-player-tile ${currentPlayer?.id === player.id ? 'self' : ''}`}>
+            <div className="player-name">{player.name}</div>
+            <div className="whoami-player-meta">
+              {currentPlayer?.id === player.id ? 'Это вы' : 'Участник раунда'}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="theme-selection">
+        <h3>Тема персонажей</h3>
+        <div className="themes-grid">
+          {spyThemes.map((theme) => (
+            <button
+              key={theme.id}
+              type="button"
+              className={`theme-button ${selectedTheme === theme.id ? 'active' : ''}`}
+              onClick={() => selectTheme(theme.id)}
+            >
+              <div className="theme-name">{theme.name}</div>
+              <div className="theme-difficulty">
+                {Array.isArray(theme.words) && theme.words.length === 0
+                  ? 'Список пуст — задайте слова в themes.js'
+                  : `Карточек: ${theme.words?.length ?? 0}`}
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="lobby-footer">
+        <div className="lobby-info">
+          {!canStartSpy && (
+            <p className="warning-text">
+              Нужно минимум 2 игрока в комнате и ваш вход по имени
+            </p>
+          )}
+          {canStartSpy && (
+            <p className="hint-text">
+              Старт перераспределяет шпиона и персонажей заново для текущего списка игроков.
+            </p>
+          )}
+        </div>
+        <button
+          className="btn btn-large btn-start"
+          onClick={startSpyGame}
+          disabled={!canStartSpy}
+        >
+          Начать «Шпион»
+        </button>
+      </div>
+    </div>
+  );
+
   const renderWhoAmILobby = () => (
     <div className="whoami-lobby">
       <div className="section-heading">
@@ -280,6 +359,7 @@ const Lobby = () => {
 
       {selectedGame === 'codenames' && renderCodenamesLobby()}
       {selectedGame === 'whoami' && renderWhoAmILobby()}
+      {selectedGame === 'spy' && renderSpyLobby()}
     </div>
   );
 };
