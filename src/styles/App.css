@@ -1352,6 +1352,83 @@ body {
   margin-top: 8px;
 }
 
+.spy-turn-panel {
+  text-align: left;
+  max-width: 420px;
+  margin: 0 auto 28px;
+  padding: 20px 22px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(25, 32, 44, 0.45);
+}
+
+.spy-turn-heading {
+  font-size: 1.05em;
+  font-weight: 700;
+  color: #e8ecf4;
+  margin: 0 0 12px;
+  text-align: center;
+}
+
+.spy-turn-current {
+  text-align: center;
+  color: #b8c0d0;
+  margin: 0 0 14px;
+  font-size: 0.98em;
+}
+
+.spy-turn-current strong {
+  color: #e8ecf4;
+}
+
+.spy-turn-list {
+  margin: 0 0 16px;
+  padding-left: 1.25em;
+  color: #c4cad8;
+}
+
+.spy-turn-item {
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  margin-left: -0.25em;
+  border-radius: 8px;
+  list-style-position: outside;
+}
+
+.spy-turn-item-current {
+  background: rgba(100, 140, 200, 0.2);
+  border: 1px solid rgba(140, 180, 230, 0.35);
+}
+
+.spy-turn-num {
+  margin-right: 6px;
+  opacity: 0.85;
+}
+
+.spy-turn-name {
+  font-weight: 600;
+  color: #e8ecf4;
+}
+
+.spy-turn-badge {
+  margin-left: 10px;
+  font-size: 0.75em;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #9ec5ff;
+}
+
+.spy-next-turn {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.spy-turn-note {
+  text-align: center;
+  margin: 0;
+  font-size: 0.88em;
+}
+
 @media (max-width: 768px) {
   .lobby {
     padding: 24px;

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useGame } from '../context/GameContext';
 import { THEMES } from '../utils/themes';
 
@@ -8,7 +8,12 @@ const SpyGame = () => {
     resetGame,
     spyPlayerId,
     spyCharacterByPlayer,
-    selectedTheme
+    spyTurnOrder,
+    spyCurrentTurnIndex,
+    advanceSpyTurn,
+    selectedTheme,
+    players = [],
+    gameState
   } = useGame();
 
   const themeMeta = THEMES[selectedTheme];
@@ -16,6 +21,27 @@ const SpyGame = () => {
 
   const isSpy = currentPlayer && spyPlayerId === currentPlayer.id;
   const character = currentPlayer ? spyCharacterByPlayer[currentPlayer.id] : null;
+
+  const playerById = useMemo(() => {
+    const m = new Map();
+    players.forEach((p) => m.set(p.id, p));
+    return m;
+  }, [players]);
+
+  const turnRows = useMemo(
+    () =>
+      spyTurnOrder.map((id, i) => ({
+        id,
+        name: playerById.get(id)?.name || 'Игрок',
+        isCurrent: gameState === 'playing' && i === spyCurrentTurnIndex
+      })),
+    [spyTurnOrder, playerById, spyCurrentTurnIndex, gameState]
+  );
+
+  const currentTurnName =
+    turnRows.length > 0 && spyCurrentTurnIndex < turnRows.length
+      ? turnRows[spyCurrentTurnIndex].name
+      : null;
 
   return (
     <div className="game spy-game">
@@ -42,7 +68,36 @@ const SpyGame = () => {
             <h2>Ваш персонаж</h2>
             <p className="spy-character-name">{character || '—'}</p>
             <p className="spy-role-hint muted">
-              Остальные игроки (кроме одного шпиона) получили своих персонажей по этой теме.
+              У всех, кроме шпиона, один и тот же персонаж по этой теме. Шпион его не знает.
+            </p>
+          </div>
+        )}
+
+        {gameState === 'playing' && turnRows.length > 0 && (
+          <div className="spy-turn-panel">
+            <h3 className="spy-turn-heading">Очерёдность ходов</h3>
+            {currentTurnName && (
+              <p className="spy-turn-current">
+                Сейчас ход: <strong>{currentTurnName}</strong>
+              </p>
+            )}
+            <ol className="spy-turn-list">
+              {turnRows.map((row, idx) => (
+                <li
+                  key={row.id}
+                  className={`spy-turn-item ${row.isCurrent ? 'spy-turn-item-current' : ''}`}
+                >
+                  <span className="spy-turn-num">{idx + 1}.</span>
+                  <span className="spy-turn-name">{row.name}</span>
+                  {row.isCurrent && <span className="spy-turn-badge">ход</span>}
+                </li>
+              ))}
+            </ol>
+            <button type="button" className="btn btn-secondary spy-next-turn" onClick={advanceSpyTurn}>
+              Следующий ход
+            </button>
+            <p className="spy-role-hint muted spy-turn-note">
+              Порядок случайный в каждой новой игре. Нажмите, когда игрок закончил ход.
             </p>
           </div>
         )}

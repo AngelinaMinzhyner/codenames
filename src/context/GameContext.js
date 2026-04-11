@@ -41,6 +41,8 @@ export const GameProvider = ({ children }) => {
   const [whoAmINotes, setWhoAmINotes] = useState({});
   const [spyPlayerId, setSpyPlayerId] = useState(null);
   const [spyCharacterByPlayer, setSpyCharacterByPlayer] = useState({});
+  const [spyTurnOrder, setSpyTurnOrder] = useState([]);
+  const [spyCurrentTurnIndex, setSpyCurrentTurnIndex] = useState(0);
   
   // Firebase
   const [roomId, setRoomId] = useState(null);
@@ -88,6 +90,8 @@ export const GameProvider = ({ children }) => {
   const resetSpyState = useCallback(() => {
     setSpyPlayerId(null);
     setSpyCharacterByPlayer({});
+    setSpyTurnOrder([]);
+    setSpyCurrentTurnIndex(0);
   }, []);
 
   // Синхронизация с Firebase
@@ -145,6 +149,12 @@ export const GameProvider = ({ children }) => {
         } else if (activeGame === 'spy') {
           setSpyPlayerId(gs.spyPlayerId || null);
           setSpyCharacterByPlayer(gs.characterByPlayer || {});
+          setSpyTurnOrder(Array.isArray(gs.turnOrder) ? gs.turnOrder : []);
+          setSpyCurrentTurnIndex(
+            typeof gs.currentTurnIndex === 'number' && gs.currentTurnIndex >= 0
+              ? gs.currentTurnIndex
+              : 0
+          );
           if (gs.selectedTheme) {
             setSelectedThemeState(gs.selectedTheme);
           }
@@ -441,6 +451,8 @@ export const GameProvider = ({ children }) => {
       selectedTheme,
       spyPlayerId: distribution.spyPlayerId,
       characterByPlayer: distribution.characterByPlayer,
+      turnOrder: distribution.turnOrder,
+      currentTurnIndex: distribution.currentTurnIndex,
       lastEvent: {
         id: Date.now(),
         type: 'start',
@@ -451,6 +463,19 @@ export const GameProvider = ({ children }) => {
 
     await update(ref(db, `rooms/${roomId}`), {
       status: 'playing'
+    });
+  };
+
+  const advanceSpyTurn = async () => {
+    if (!roomId || selectedGame !== 'spy' || gameState !== 'playing') return;
+    await ensureAuth();
+
+    const n = spyTurnOrder.length;
+    if (n === 0) return;
+
+    const next = (spyCurrentTurnIndex + 1) % n;
+    await update(ref(db), {
+      [`rooms/${roomId}/gameState/currentTurnIndex`]: next
     });
   };
 
@@ -796,6 +821,9 @@ export const GameProvider = ({ children }) => {
     whoAmINotes,
     spyPlayerId,
     spyCharacterByPlayer,
+    spyTurnOrder,
+    spyCurrentTurnIndex,
+    advanceSpyTurn,
     roomId,
     synced,
     addPlayer,

@@ -1,19 +1,17 @@
 /**
- * Распределение ролей: один случайный шпион, остальным — уникальные персонажи из темы.
+ * Распределение ролей: один случайный шпион; всем остальным — один и тот же персонаж из темы.
+ * Порядок ходов — случайная перестановка всех игроков (новая при каждом старте).
  * @param {Array<{ id: string }>} players
- * @param {string[]} words — достаточно минимум players.length - 1 уникальных имён
- * @returns {{ spyPlayerId: string, characterByPlayer: Record<string, string> }}
+ * @param {string[]} words — хотя бы одно имя в теме
+ * @returns {{ spyPlayerId: string, characterByPlayer: Record<string, string>, turnOrder: string[], currentTurnIndex: number }}
  */
 export function distributeSpyRoles(players, words) {
   if (!players?.length || players.length < 2) {
     throw new Error('Нужно минимум 2 игрока');
   }
-  const need = players.length - 1;
   const unique = [...new Set(words.map((w) => String(w).trim()).filter(Boolean))];
-  if (unique.length < need) {
-    throw new Error(
-      `В теме не хватает персонажей: нужно ${need}, доступно ${unique.length}`
-    );
+  if (unique.length < 1) {
+    throw new Error('В теме нет персонажей');
   }
 
   const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
@@ -21,10 +19,14 @@ export function distributeSpyRoles(players, words) {
   const nonSpy = shuffledPlayers.slice(1);
 
   const pool = [...unique].sort(() => Math.random() - 0.5);
+  const sharedCharacter = pool[0];
+
   const characterByPlayer = {};
-  nonSpy.forEach((p, i) => {
-    characterByPlayer[p.id] = pool[i];
+  nonSpy.forEach((p) => {
+    characterByPlayer[p.id] = sharedCharacter;
   });
 
-  return { spyPlayerId, characterByPlayer };
+  const turnOrder = [...players].map((p) => p.id).sort(() => Math.random() - 0.5);
+
+  return { spyPlayerId, characterByPlayer, turnOrder, currentTurnIndex: 0 };
 }
