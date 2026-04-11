@@ -1,16 +1,16 @@
 import React, { useMemo } from 'react';
 import { useGame } from '../context/GameContext';
 import { THEMES } from '../utils/themes';
+import SpyScoresPanel from './SpyScoresPanel';
 
 const SpyGame = () => {
   const {
     currentPlayer,
     resetGame,
+    startSpyGame,
     spyPlayerId,
     spyCharacterByPlayer,
     spyTurnOrder,
-    spyCurrentTurnIndex,
-    advanceSpyTurn,
     selectedTheme,
     players = [],
     gameState
@@ -30,18 +30,14 @@ const SpyGame = () => {
 
   const turnRows = useMemo(
     () =>
-      spyTurnOrder.map((id, i) => ({
+      spyTurnOrder.map((id) => ({
         id,
-        name: playerById.get(id)?.name || 'Игрок',
-        isCurrent: gameState === 'playing' && i === spyCurrentTurnIndex
+        name: playerById.get(id)?.name || 'Игрок'
       })),
-    [spyTurnOrder, playerById, spyCurrentTurnIndex, gameState]
+    [spyTurnOrder, playerById]
   );
 
-  const currentTurnName =
-    turnRows.length > 0 && spyCurrentTurnIndex < turnRows.length
-      ? turnRows[spyCurrentTurnIndex].name
-      : null;
+  const canRestartRound = players.length >= 2 && Boolean(currentPlayer);
 
   return (
     <div className="game spy-game">
@@ -53,6 +49,8 @@ const SpyGame = () => {
         <p className="spy-theme-line">
           Тема: <strong>{themeName}</strong>
         </p>
+
+        <SpyScoresPanel />
 
         {!currentPlayer ? (
           <p className="info-text">Войдите в комнату, чтобы увидеть роль.</p>
@@ -76,33 +74,32 @@ const SpyGame = () => {
         {gameState === 'playing' && turnRows.length > 0 && (
           <div className="spy-turn-panel">
             <h3 className="spy-turn-heading">Очерёдность ходов</h3>
-            {currentTurnName && (
-              <p className="spy-turn-current">
-                Сейчас ход: <strong>{currentTurnName}</strong>
-              </p>
-            )}
+            <p className="spy-role-hint muted spy-turn-note">
+              Порядок случайный при каждом новом раунде — ориентир, кто за кем задаёт вопросы.
+            </p>
             <ol className="spy-turn-list">
               {turnRows.map((row, idx) => (
-                <li
-                  key={row.id}
-                  className={`spy-turn-item ${row.isCurrent ? 'spy-turn-item-current' : ''}`}
-                >
+                <li key={row.id} className="spy-turn-item">
                   <span className="spy-turn-num">{idx + 1}.</span>
                   <span className="spy-turn-name">{row.name}</span>
-                  {row.isCurrent && <span className="spy-turn-badge">ход</span>}
                 </li>
               ))}
             </ol>
-            <button type="button" className="btn btn-secondary spy-next-turn" onClick={advanceSpyTurn}>
-              Следующий ход
-            </button>
-            <p className="spy-role-hint muted spy-turn-note">
-              Порядок случайный в каждой новой игре. Нажмите, когда игрок закончил ход.
-            </p>
           </div>
         )}
 
-        <div className="spy-footer">
+        <div className="spy-footer spy-footer-actions">
+          {gameState === 'playing' && (
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={startSpyGame}
+              disabled={!canRestartRound}
+              title={!canRestartRound ? 'Нужны минимум 2 игрока и вход в комнату' : undefined}
+            >
+              Новый раунд
+            </button>
+          )}
           <button type="button" className="btn btn-outline" onClick={resetGame}>
             Выйти в лобби
           </button>

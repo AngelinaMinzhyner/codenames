@@ -1352,6 +1352,81 @@ body {
   margin-top: 8px;
 }
 
+.spy-footer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 16px;
+}
+
+.spy-scores-panel {
+  text-align: left;
+  max-width: 440px;
+  margin: 0 auto 24px;
+  padding: 18px 20px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(25, 32, 44, 0.45);
+}
+
+.spy-scores-heading {
+  font-size: 1.05em;
+  font-weight: 700;
+  color: #e8ecf4;
+  margin: 0 0 10px;
+  text-align: center;
+}
+
+.spy-scores-hint {
+  color: #8a92a8;
+  font-size: 0.88em;
+  line-height: 1.45;
+  margin: 0 0 14px;
+}
+
+.spy-scores-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.spy-scores-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.spy-scores-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  color: #e8ecf4;
+}
+
+.spy-scores-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  color: #c8d8f0;
+  min-width: 2ch;
+  text-align: right;
+}
+
+.spy-scores-plus {
+  flex-shrink: 0;
+}
+
+.spy-scores-login {
+  margin: 10px 0 0;
+  text-align: center;
+  font-size: 0.88em;
+}
+
 .spy-turn-panel {
   text-align: left;
   max-width: 420px;
@@ -1370,19 +1445,8 @@ body {
   text-align: center;
 }
 
-.spy-turn-current {
-  text-align: center;
-  color: #b8c0d0;
-  margin: 0 0 14px;
-  font-size: 0.98em;
-}
-
-.spy-turn-current strong {
-  color: #e8ecf4;
-}
-
 .spy-turn-list {
-  margin: 0 0 16px;
+  margin: 12px 0 0;
   padding-left: 1.25em;
   color: #c4cad8;
 }
@@ -1395,11 +1459,6 @@ body {
   list-style-position: outside;
 }
 
-.spy-turn-item-current {
-  background: rgba(100, 140, 200, 0.2);
-  border: 1px solid rgba(140, 180, 230, 0.35);
-}
-
 .spy-turn-num {
   margin-right: 6px;
   opacity: 0.85;
@@ -1410,22 +1469,9 @@ body {
   color: #e8ecf4;
 }
 
-.spy-turn-badge {
-  margin-left: 10px;
-  font-size: 0.75em;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #9ec5ff;
-}
-
-.spy-next-turn {
-  width: 100%;
-  margin-bottom: 10px;
-}
-
 .spy-turn-note {
   text-align: center;
-  margin: 0;
+  margin: 0 0 4px;
   font-size: 0.88em;
 }
 

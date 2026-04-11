@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { getThemesList, SPY_THEME_IDS } from '../utils/themes';
 import { GAME_OPTIONS } from '../utils/games';
+import SpyScoresPanel from './SpyScoresPanel';
 
 const Lobby = () => {
   const {
@@ -246,6 +247,8 @@ const Lobby = () => {
           Очерёдность ходов на экране игры — случайная при каждом старте.
         </p>
       </div>
+
+      <SpyScoresPanel />
 
       <div className="whoami-lobby-grid">
         {players.map((player) => (

@@ -3,7 +3,7 @@
  * Порядок ходов — случайная перестановка всех игроков (новая при каждом старте).
  * @param {Array<{ id: string }>} players
  * @param {string[]} words — хотя бы одно имя в теме
- * @returns {{ spyPlayerId: string, characterByPlayer: Record<string, string>, turnOrder: string[], currentTurnIndex: number }}
+ * @returns {{ spyPlayerId: string, characterByPlayer: Record<string, string>, turnOrder: string[] }}
  */
 export function distributeSpyRoles(players, words) {
   if (!players?.length || players.length < 2) {
@@ -28,5 +28,5 @@ export function distributeSpyRoles(players, words) {
 
   const turnOrder = [...players].map((p) => p.id).sort(() => Math.random() - 0.5);
 
-  return { spyPlayerId, characterByPlayer, turnOrder, currentTurnIndex: 0 };
+  return { spyPlayerId, characterByPlayer, turnOrder };
 }

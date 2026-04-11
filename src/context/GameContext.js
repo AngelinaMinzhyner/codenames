@@ -3,7 +3,7 @@ import { generateCards, checkWinner, countRemaining } from '../utils/gameLogic';
 import { getThemeWords } from '../utils/themes';
 import { distributeSpyRoles } from '../utils/spyLogic';
 import { ensureAuth } from '../utils/firebase';
-import { ref, onValue, set, update, off } from 'firebase/database';
+import { ref, onValue, set, update, off, increment } from 'firebase/database';
 import { db } from '../utils/firebase';
 
 const GameContext = createContext();
@@ -42,7 +42,8 @@ export const GameProvider = ({ children }) => {
   const [spyPlayerId, setSpyPlayerId] = useState(null);
   const [spyCharacterByPlayer, setSpyCharacterByPlayer] = useState({});
   const [spyTurnOrder, setSpyTurnOrder] = useState([]);
-  const [spyCurrentTurnIndex, setSpyCurrentTurnIndex] = useState(0);
+  /** Очки за сессию в комнате (ручное начисление после каждого раунда). */
+  const [spyScores, setSpyScores] = useState({});
   
   // Firebase
   const [roomId, setRoomId] = useState(null);
@@ -91,7 +92,6 @@ export const GameProvider = ({ children }) => {
     setSpyPlayerId(null);
     setSpyCharacterByPlayer({});
     setSpyTurnOrder([]);
-    setSpyCurrentTurnIndex(0);
   }, []);
 
   // Синхронизация с Firebase
@@ -122,6 +122,13 @@ export const GameProvider = ({ children }) => {
         setPlayers([]);
       }
 
+      const rawSpyScores = roomData.spyScores;
+      setSpyScores(
+        rawSpyScores && typeof rawSpyScores === 'object' && !Array.isArray(rawSpyScores)
+          ? rawSpyScores
+          : {}
+      );
+
       // Синхронизируем состояние игры
       if (roomData.gameState) {
         const gs = roomData.gameState;
@@ -150,11 +157,6 @@ export const GameProvider = ({ children }) => {
           setSpyPlayerId(gs.spyPlayerId || null);
           setSpyCharacterByPlayer(gs.characterByPlayer || {});
           setSpyTurnOrder(Array.isArray(gs.turnOrder) ? gs.turnOrder : []);
-          setSpyCurrentTurnIndex(
-            typeof gs.currentTurnIndex === 'number' && gs.currentTurnIndex >= 0
-              ? gs.currentTurnIndex
-              : 0
-          );
           if (gs.selectedTheme) {
             setSelectedThemeState(gs.selectedTheme);
           }
@@ -452,7 +454,6 @@ export const GameProvider = ({ children }) => {
       spyPlayerId: distribution.spyPlayerId,
       characterByPlayer: distribution.characterByPlayer,
       turnOrder: distribution.turnOrder,
-      currentTurnIndex: distribution.currentTurnIndex,
       lastEvent: {
         id: Date.now(),
         type: 'start',
@@ -466,16 +467,17 @@ export const GameProvider = ({ children }) => {
     });
   };
 
-  const advanceSpyTurn = async () => {
-    if (!roomId || selectedGame !== 'spy' || gameState !== 'playing') return;
+  const awardSpyRoundPoint = async (playerId) => {
+    if (!roomId || selectedGame !== 'spy') return;
     await ensureAuth();
 
-    const n = spyTurnOrder.length;
-    if (n === 0) return;
+    if (!currentPlayer) {
+      alert('Сначала войдите в комнату.');
+      return;
+    }
 
-    const next = (spyCurrentTurnIndex + 1) % n;
     await update(ref(db), {
-      [`rooms/${roomId}/gameState/currentTurnIndex`]: next
+      [`rooms/${roomId}/spyScores/${playerId}`]: increment(1)
     });
   };
 
@@ -822,8 +824,8 @@ export const GameProvider = ({ children }) => {
     spyPlayerId,
     spyCharacterByPlayer,
     spyTurnOrder,
-    spyCurrentTurnIndex,
-    advanceSpyTurn,
+    spyScores,
+    awardSpyRoundPoint,
     roomId,
     synced,
     addPlayer,
